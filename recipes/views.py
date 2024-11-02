@@ -1,132 +1,120 @@
 from django.shortcuts import render, redirect
-from django.views.generic import ListView, CreateView, DetailView
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
 from .models import Ingredient, Recipe
 import openai
-from django.conf import settings
-from django.http import JsonResponse
+import os
+from django.contrib.auth import login, authenticate
+from .forms import SignUpForm
 
 
-class HomeView(ListView):
-    template_name = 'recipes/home.html'
-    model = Recipe
-    context_object_name = 'recipes'
+def home(request):
+    return render(request, 'recipes/home.html')
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['ingredients'] = Ingredient.objects.all()
-        return context
-
-
-class AddIngredientView(CreateView):
-    model = Ingredient
-    fields = ['name', 'quantity', 'unit']
-    template_name = 'recipes/add_ingredient.html'
-    success_url = '/'
-
-
-class RecipeDetailView(DetailView):
-    model = Recipe
-    template_name = 'recipes/recipe_detail.html'
-    context_object_name = 'recipe'
+def signup(request):
+    if request.method == 'POST':
+        form = SignUpForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            # Log the user in automatically after registration
+            raw_password = form.cleaned_data.get('password1')
+            user = authenticate(username=user.username, password=raw_password)
+            login(request, user)
+            return redirect('home')
+    else:
+        form = SignUpForm()
+    return render(request, 'recipes/signup.html', {'form': form})
 
 
-client = openai.OpenAI(api_key=settings.OPENAI_API_KEY)
+@login_required
+def my_items(request):
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        quantity = request.POST.get('quantity')
+        unit = request.POST.get('unit')
+        Ingredient.objects.create(
+            user=request.user,
+            name=name,
+            quantity=quantity,
+            unit=unit
+        )
+        return redirect('my_items')
 
+    ingredients = Ingredient.objects.filter(user=request.user)
+    return render(request, 'recipes/my_items.html', {'ingredients': ingredients})
+
+
+@login_required
 def generate_recipe(request):
+    ingredients = Ingredient.objects.filter(user=request.user)
+    return render(request, 'recipes/generate_recipe.html', {'ingredients': ingredients})
+
+
+@login_required
+def choose_diet(request):
     if request.method == 'POST':
         selected_ingredients = request.POST.getlist('ingredients')
-        must_use_ingredient = request.POST.get('must_use')
-        additional_ingredient = request.POST.get('additional')
+        request.session['selected_ingredients'] = selected_ingredients
+        return render(request, 'recipes/choose_diet.html')
+    return redirect('generate_recipe')
 
-        # Get all selected ingredients
-        ingredients = Ingredient.objects.filter(id__in=selected_ingredients)
-        ingredient_list = [i.name for i in ingredients]
 
-        # Prepare prompt for ChatGPT
-        prompt = f"Generate a recipe using these ingredients: {', '.join(ingredient_list)}"
-        if must_use_ingredient:
-            prompt += f"\nMust use: {must_use_ingredient}"
-        if additional_ingredient:
-            prompt += f"\nAlso include: {additional_ingredient}"
-
-        try:
-            # Call ChatGPT API
-            response = client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=[
-                    {"role": "system",
-                     "content": "You are a helpful chef who creates recipes based on available ingredients."},
-                    {"role": "user", "content": prompt}
-                ]
-            )
-
-            recipe_text = response.choices[0].message.content
-
-            # Create new recipe
-            recipe = Recipe.objects.create(
-                title=f"Recipe with {', '.join(ingredient_list[:3])}...",
-                instructions=recipe_text
-            )
-            recipe.ingredients_used.set(ingredients)
-
-            return redirect('recipe_detail', pk=recipe.pk)
-
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=400)
-
-    return redirect('home')
-
-'''
-from django.shortcuts import render, redirect
-
-from MealMate import settings
-from .models import Item, Recipe
-from .forms import ItemForm
-import openai
-
-def main_screen(request):
-    return render(request, 'recipes/main_screen.html')
-
-def add_item(request):
+@login_required
+def choose_servings(request):
     if request.method == 'POST':
-        form = ItemForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('main_screen')
-    else:
-        form = ItemForm()
-    return render(request, 'recipes/add_item.html', {'form': form})
+        diet_type = request.POST.get('diet_type')
+        request.session['diet_type'] = diet_type
+        return render(request, 'recipes/choose_servings.html')
+    return redirect('choose_diet')
 
-client = openai.OpenAI(api_key=settings.OPENAI_API_KEY)
 
-def generate_recipes(request):
-    items = Item.objects.all()  # Fetch all items in the inventory
-    recipes = ""  # Initialize an empty string for recipes
-
+@login_required
+def review(request):
     if request.method == 'POST':
-        selected_ingredient = request.POST.get('ingredient', '')
-        additional_ingredient = request.POST.get('additional_ingredient', '')
+        servings = request.POST.get('servings')
+        request.session['servings'] = servings
 
-        # Construct the prompt for ChatGPT
-        prompt = f"Generate a recipe using {selected_ingredient}"
-        if additional_ingredient:
-            prompt += f", and include {additional_ingredient} as well."
+        selected_ingredients = request.session.get('selected_ingredients', [])
+        diet_type = request.session.get('diet_type')
 
-        try:
-            # Use the updated method for generating chat completions
-            response = client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=[
-                    {"role": "system", "content": "You are a helpful assistant."},
-                    {"role": "user", "content": prompt}
-                ],
-                max_tokens=300
-            )
+        context = {
+            'ingredients': Ingredient.objects.filter(id__in=selected_ingredients),
+            'diet_type': diet_type,
+            'servings': servings,
+        }
+        return render(request, 'recipes/review.html', context)
+    return redirect('choose_servings')
 
-            # Get cleaned response
-            recipes = response.choices[0].message.content.strip()
-        except Exception as e:
-            recipes = f"Error generating recipes: {str(e)}"
 
-    return render(request, 'recipes/generate_recipes.html', {'items': items, 'recipes': recipes})
-'''
+@login_required
+def generate(request):
+    ingredients = request.session.get('selected_ingredients', [])
+    diet_type = request.session.get('diet_type')
+    servings = request.session.get('servings')
+
+    # Call ChatGPT API
+    ingredients_list = Ingredient.objects.filter(id__in=ingredients)
+    ingredients_text = ", ".join([f"{i.quantity} {i.unit} {i.name}" for i in ingredients_list])
+
+    prompt = f"Create a {diet_type} recipe for {servings} people using these ingredients: {ingredients_text}"
+
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": prompt}]
+        )
+        recipe_text = response.choices[0].message.content
+
+        # Save recipe
+        recipe = Recipe.objects.create(
+            user=request.user,
+            title=f"{diet_type.capitalize()} Recipe",
+            instructions=recipe_text,
+            diet_type=diet_type,
+            servings=servings
+        )
+        recipe.ingredients.set(ingredients_list)
+
+        return render(request, 'recipes/recipe_result.html', {'recipe': recipe})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

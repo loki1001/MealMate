@@ -1,63 +1,13 @@
-{% extends 'base.html' %}
+{% extends 'recipes/base.html' %}
 
 {% block content %}
-<div class="container mt-5">
-    <h1>MealMate</h1>
-    
-    <div class="row mt-4">
-        <div class="col-md-6">
-            <a href="{% url 'add_ingredient' %}" class="btn btn-primary btn-lg btn-block">Add Items</a>
-        </div>
-    </div>
-
-    <div class="row mt-4">
-        <div class="col-12">
-            <h3>Generate Recipe</h3>
-            <form method="POST" action="{% url 'generate_recipe' %}">
-                {% csrf_token %}
-                <div class="form-group">
-                    <label>Select Available Ingredients:</label>
-                    <select multiple class="form-control" name="ingredients">
-                        {% for ingredient in ingredients %}
-                            <option value="{{ ingredient.id }}">{{ ingredient }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                
-                <div class="form-group mt-3">
-                    <label>Must Use Ingredient:</label>
-                    <select class="form-control" name="must_use">
-                        <option value="">None</option>
-                        {% for ingredient in ingredients %}
-                            <option value="{{ ingredient.id }}">{{ ingredient.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div class="form-group mt-3">
-                    <label>Additional Ingredient Not Listed:</label>
-                    <input type="text" class="form-control" name="additional">
-                </div>
-
-                <button type="submit" class="btn btn-success mt-3">Generate Recipe</button>
-            </form>
-        </div>
-    </div>
-
-    <div class="row mt-4">
-        <div class="col-12">
-            <h3>Recent Recipes</h3>
-            {% for recipe in recipes %}
-                <div class="card mt-3">
-                    <div class="card-body">
-                        <h5 class="card-title">{{ recipe.title }}</h5>
-                        <p class="card-text">{{ recipe.instructions|truncatewords:50 }}</p>
-                        <small class="text-muted">Generated: {{ recipe.date_generated }}</small>
-                        <a href="{% url 'recipe_detail' pk=recipe.pk %}" class="btn btn-sm btn-primary mt-2">View Full Recipe</a>
-                    </div>
-                </div>
-            {% endfor %}
-        </div>
-    </div>
+<div class="text-center">
+    <h1 class="text-4xl font-bold text-gray-800 mb-8">Welcome to Recipe Generator</h1>
+    <p class="text-xl text-gray-600 mb-8">Generate delicious recipes using ingredients you already have!</p>
+    {% if user.is_authenticated %}
+        <a href="{% url 'generate_recipe' %}" class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition duration-300">Start Generating Recipes</a>
+    {% else %}
+        <a href="{% url 'login' %}" class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition duration-300">Login to Start</a>
+    {% endif %}
 </div>
 {% endblock %}

@@ -1,7 +1,10 @@
 from django import forms
-from .models import Item
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import User
 
-class ItemForm(forms.ModelForm):
+class SignUpForm(UserCreationForm):
+    email = forms.EmailField(max_length=254, required=True, help_text='Required. Enter a valid email address.')
+
     class Meta:
-        model = Item
-        fields = ['name']
+        model = User
+        fields = ('username', 'email', 'password1', 'password2')

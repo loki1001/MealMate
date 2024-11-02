@@ -1,0 +1,33 @@
+<!-- templates/recipes/review.html -->
+{% extends 'recipes/base.html' %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <h2 class="text-2xl font-bold mb-6">Review Your Choices</h2>
+
+    <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+        <h3 class="text-lg font-semibold mb-4">Selected Ingredients:</h3>
+        <ul class="list-disc list-inside">
+            {% for ingredient in ingredients %}
+                <li>{{ ingredient.name }} - {{ ingredient.quantity }} {{ ingredient.unit }}</li>
+            {% endfor %}
+        </ul>
+
+        <h3 class="text-lg font-semibold mt-6">Diet Type:</h3>
+        <p>{{ diet_type }}</p>
+
+        <h3 class="text-lg font-semibold mt-6">Number of Servings:</h3>
+        <p>{{ servings }}</p>
+
+        <form method="POST" action="{% url 'generate' %}">
+            {% csrf_token %}
+            <input type="hidden" name="diet_type" value="{{ diet_type }}">
+            <input type="hidden" name="servings" value="{{ servings }}">
+            <input type="hidden" name="selected_ingredients" value="{{ ingredients|join:',' }}">
+            <button class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mt-4" type="submit">
+                Generate Recipe
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
