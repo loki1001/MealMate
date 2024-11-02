@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card">
+        <div class="card-header">
+            <h2>{{ recipe.title }}</h2>
+            <small class="text-muted">Generated: {{ recipe.date_generated }}</small>
+        </div>
+        <div class="card-body">
+            <h5 class="card-title">Ingredients Used:</h5>
+            <ul class="list-group list-group-flush mb-4">
+                {% for ingredient in recipe.ingredients_used.all %}
+                    <li class="list-group-item">{{ ingredient.name }} - {{ ingredient.quantity }} {{ ingredient.unit }}</li>
+                {% endfor %}
+            </ul>
+
+            <h5 class="card-title">Instructions:</h5>
+            <div class="card-text">
+                {{ recipe.instructions|linebreaks }}
+            </div>
+        </div>
+        <div class="card-footer">
+            <a href="{% url 'home' %}" class="btn btn-primary">Back to Home</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
