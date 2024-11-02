@@ -22,6 +22,9 @@
         <h3 class="text-lg font-semibold mt-4">Selected Ingredients</h3>
         <ul id="selected-ingredients" class="list-disc pl-5 mb-4"></ul>
 
+        <!-- Hidden input to store selected ingredient IDs -->
+        <input type="hidden" id="selected-ingredients-input" name="ingredients" value="">
+
         <button type="button" onclick="document.getElementById('add-ingredient').classList.toggle('hidden');" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mb-4">
             Add New Ingredient
         </button>
@@ -46,6 +49,7 @@
 function addIngredient() {
     const select = document.getElementById('ingredient-select');
     const selectedIngredients = document.getElementById('selected-ingredients');
+    const hiddenInput = document.getElementById('selected-ingredients-input');
 
     if (select.value) {
         const selectedOption = select.options[select.selectedIndex];
@@ -53,9 +57,20 @@ function addIngredient() {
         const quantity = selectedOption.getAttribute('data-quantity');
         const unit = selectedOption.getAttribute('data-unit');
 
+        // Check for duplicates before adding
+        const existingItems = Array.from(selectedIngredients.getElementsByTagName('li'));
+        if (existingItems.some(item => item.textContent === `${name} - ${quantity} ${unit}`)) {
+            alert('This ingredient has already been selected.');
+            return;
+        }
+
         const li = document.createElement('li');
         li.textContent = `${name} - ${quantity} ${unit}`;
         selectedIngredients.appendChild(li);
+
+        // Add the ingredient ID to the hidden input
+        const currentValue = hiddenInput.value;
+        hiddenInput.value = currentValue ? currentValue + ',' + select.value : select.value;
 
         // Disable the selected option
         selectedOption.disabled = true;
@@ -70,11 +85,16 @@ function addNewIngredient() {
     const newQuantity = document.getElementById('new_quantity').value;
     const newUnit = document.getElementById('new_unit').value.trim();
     const selectedIngredients = document.getElementById('selected-ingredients');
+    const hiddenInput = document.getElementById('selected-ingredients-input');
 
     if (newName && newQuantity && newUnit) {
         const li = document.createElement('li');
         li.textContent = `${newName} - ${newQuantity} ${newUnit}`;
         selectedIngredients.appendChild(li);
+
+        // Add a placeholder ID for the new ingredient to the hidden input (or you can create logic to handle new ingredient IDs)
+        const currentValue = hiddenInput.value;
+        hiddenInput.value = currentValue ? currentValue + ',new' : 'new';
 
         // Clear input fields after adding
         document.getElementById('new_name').value = '';
