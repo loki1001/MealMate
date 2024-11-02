@@ -1,3 +1,6 @@
+import json
+
+from django.core.checks import messages
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
@@ -53,9 +56,23 @@ def generate_recipe(request):
 @login_required(login_url='/login/')
 def choose_diet(request):
     if request.method == 'POST':
-        selected_ingredients = request.POST.getlist('ingredients')
-        request.session['selected_ingredients'] = selected_ingredients
-        return render(request, 'recipes/choose_diet.html')
+        # Get database ingredients
+        db_ingredients = request.POST.get('db_ingredients', '').split(',')
+        db_ingredients = [id for id in db_ingredients if id]
+
+        # Get temporary ingredients
+        temp_ingredients_json = request.POST.get('temp_ingredients', '[]')
+        try:
+            temp_ingredients = json.loads(temp_ingredients_json)
+
+            # Store both types of ingredients in session
+            request.session['db_ingredients'] = db_ingredients
+            request.session['temp_ingredients'] = temp_ingredients
+
+            return render(request, 'recipes/choose_diet.html')
+        except json.JSONDecodeError:
+            messages.error(request, 'Error processing ingredients')
+            return redirect('generate_recipe')
     return redirect('generate_recipe')
 
 
@@ -74,11 +91,27 @@ def review(request):
         servings = request.POST.get('servings')
         request.session['servings'] = servings
 
-        selected_ingredients = request.session.get('selected_ingredients', [])
+        # Get both types of ingredients from session
+        db_ingredients = request.session.get('db_ingredients', [])
+        temp_ingredients = request.session.get('temp_ingredients', [])
         diet_type = request.session.get('diet_type')
 
+        # Get database ingredients
+        db_ingredients_objects = Ingredient.objects.filter(id__in=db_ingredients)
+
+        # Create temporary ingredient objects (without saving to database)
+        temp_ingredients_objects = [
+            {
+                'name': ing['name'],
+                'quantity': ing['quantity'],
+                'unit': ing['unit']
+            }
+            for ing in temp_ingredients
+        ]
+
         context = {
-            'ingredients': Ingredient.objects.filter(id__in=selected_ingredients),
+            'db_ingredients': db_ingredients_objects,
+            'temp_ingredients': temp_ingredients_objects,
             'diet_type': diet_type,
             'servings': servings,
         }
@@ -88,13 +121,20 @@ def review(request):
 
 @login_required(login_url='/login/')
 def generate(request):
-    ingredients = request.session.get('selected_ingredients', [])
+    db_ingredients = request.session.get('db_ingredients', [])
+    temp_ingredients = request.session.get('temp_ingredients', [])
     diet_type = request.session.get('diet_type')
     servings = request.session.get('servings')
 
-    # Call ChatGPT API
-    ingredients_list = Ingredient.objects.filter(id__in=ingredients)
-    ingredients_text = ", ".join([f"{i.quantity} {i.unit} {i.name}" for i in ingredients_list])
+    # Get database ingredients
+    db_ingredients_list = Ingredient.objects.filter(id__in=db_ingredients)
+
+    # Combine ingredients texts
+    ingredients_text = ", ".join([
+                                     f"{i.quantity} {i.unit} {i.name}" for i in db_ingredients_list
+                                 ] + [
+                                     f"{i['quantity']} {i['unit']} {i['name']}" for i in temp_ingredients
+                                 ])
 
     prompt = f"Create a {diet_type} recipe for {servings} people using these ingredients: {ingredients_text}"
 
@@ -105,7 +145,7 @@ def generate(request):
         )
         recipe_text = response.choices[0].message.content
 
-        # Save recipe
+        # Save recipe (only with database ingredients)
         recipe = Recipe.objects.create(
             user=request.user,
             title=f"{diet_type.capitalize()} Recipe",
@@ -113,8 +153,11 @@ def generate(request):
             diet_type=diet_type,
             servings=servings
         )
-        recipe.ingredients.set(ingredients_list)
+        recipe.ingredients.set(db_ingredients_list)
 
-        return render(request, 'recipes/recipe_result.html', {'recipe': recipe})
+        return render(request, 'recipes/recipe_result.html', {
+            'recipe': recipe,
+            'temp_ingredients': temp_ingredients  # Pass temp ingredients to template
+        })
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
