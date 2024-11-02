@@ -1,5 +1,6 @@
 import json
 
+from django.conf import settings
 from django.core.checks import messages
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
@@ -118,7 +119,7 @@ def review(request):
         return render(request, 'recipes/review.html', context)
     return redirect('choose_servings')
 
-
+client = openai.OpenAI(api_key=settings.OPENAI_API_KEY)
 @login_required(login_url='/login/')
 def generate(request):
     db_ingredients = request.session.get('db_ingredients', [])
@@ -139,9 +140,13 @@ def generate(request):
     prompt = f"Create a {diet_type} recipe for {servings} people using these ingredients: {ingredients_text}"
 
     try:
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": prompt}]
+            messages=[
+                {"role": "system",
+                 "content": "You are a helpful chef who creates recipes based on available ingredients."},
+                {"role": "user", "content": prompt}
+            ]
         )
         recipe_text = response.choices[0].message.content
 
