@@ -26,7 +26,7 @@ def signup(request):
     return render(request, 'recipes/signup.html', {'form': form})
 
 
-@login_required
+@login_required(login_url='/login/')
 def my_items(request):
     if request.method == 'POST':
         name = request.POST.get('name')
@@ -44,13 +44,13 @@ def my_items(request):
     return render(request, 'recipes/my_items.html', {'ingredients': ingredients})
 
 
-@login_required
+@login_required(login_url='/login/')
 def generate_recipe(request):
     ingredients = Ingredient.objects.filter(user=request.user)
     return render(request, 'recipes/generate_recipe.html', {'ingredients': ingredients})
 
 
-@login_required
+@login_required(login_url='/login/')
 def choose_diet(request):
     if request.method == 'POST':
         selected_ingredients = request.POST.getlist('ingredients')
@@ -59,7 +59,7 @@ def choose_diet(request):
     return redirect('generate_recipe')
 
 
-@login_required
+@login_required(login_url='/login/')
 def choose_servings(request):
     if request.method == 'POST':
         diet_type = request.POST.get('diet_type')
@@ -68,7 +68,7 @@ def choose_servings(request):
     return redirect('choose_diet')
 
 
-@login_required
+@login_required(login_url='/login/')
 def review(request):
     if request.method == 'POST':
         servings = request.POST.get('servings')
@@ -86,7 +86,7 @@ def review(request):
     return redirect('choose_servings')
 
 
-@login_required
+@login_required(login_url='/login/')
 def generate(request):
     ingredients = request.session.get('selected_ingredients', [])
     diet_type = request.session.get('diet_type')
