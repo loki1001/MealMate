@@ -10,7 +10,15 @@ import openai
 import os
 from django.contrib.auth import login, authenticate
 from .forms import SignUpForm
+from fractions import Fraction
 
+def convert_to_decimal(quantity):
+    try:
+        # Convert the quantity to a decimal number
+        return str(float(Fraction(quantity)))
+    except ValueError:
+        # Return the original value if conversion fails
+        return quantity
 
 def home(request):
     return render(request, 'recipes/home.html')
@@ -148,7 +156,24 @@ def generate(request):
                                      f"{i['quantity']} {i['unit']} {i['name']}" for i in temp_ingredients
                                  ])
 
-    prompt = f"Create a {diet_type} recipe for {servings} people using these ingredients: {ingredients_text}"
+    prompt = f"""
+        Create a {diet_type} recipe for {servings} people using these ingredients: {ingredients_text}.
+        Please ensure all ingredient quantities are specified in decimal format and avoid using terms like "to taste" or "to preference."
+        Return a JSON object with the following structure:
+        {{
+            "title": "Title of the dish",
+            "ingredients": [
+                {{"name": "ingredient_name", "quantity": "amount", "unit": "unit"}},
+                ...
+            ],
+            "servings": "number of servings",
+            "cook_time": "cooking time",
+            "instructions": [
+                "Step 1: instruction",
+                ...
+            ]
+        }}
+        """
 
     print(prompt)
     try:
@@ -160,21 +185,40 @@ def generate(request):
                 {"role": "user", "content": prompt}
             ]
         )
-        recipe_text = response.choices[0].message.content
+        response_content = response.choices[0].message.content
+        recipe_data = json.loads(response_content)
 
-        # Save recipe (only with database ingredients)
+        # Log the recipe data for debugging
+        print(recipe_data)
+
         recipe = Recipe.objects.create(
             user=request.user,
-            title=f"{diet_type.capitalize()} Recipe",
-            instructions=recipe_text,
+            title=recipe_data["title"],
             diet_type=diet_type,
-            servings=servings
+            servings=recipe_data["servings"],
+            instructions="\n".join(recipe_data.get("instructions", []))
         )
-        recipe.ingredients.set(db_ingredients_list)
 
-        return render(request, 'recipes/recipe_result.html', {
-            'recipe': recipe,
-            'temp_ingredients': temp_ingredients  # Pass temp ingredients to template
-        })
+        # Process ingredients and add to the recipe
+        for ing in recipe_data["ingredients"]:
+            # Convert quantity to decimal format
+            ing["quantity"] = convert_to_decimal(ing["quantity"]) if ing["quantity"] not in ["to taste",
+                                                                                             "to your preference"] else "-1"
+
+            # Create or get the ingredient
+            ingredient, created = Ingredient.objects.get_or_create(
+                user=request.user,
+                name=ing["name"],
+                quantity=ing["quantity"],
+                unit=ing["unit"]
+            )
+            recipe.ingredients.add(ingredient)
+
+        recipe.save()  # Save the recipe after modifications
+
+        return render(request, 'recipes/recipe_result.html', {'recipe': recipe})
+
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Failed to decode response'}, status=500)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
