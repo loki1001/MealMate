@@ -1,3 +1,4 @@
+# views.py
 import json
 
 from django.conf import settings
