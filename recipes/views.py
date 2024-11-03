@@ -6,7 +6,7 @@ from django.contrib import messages
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-from .models import Ingredient, Recipe
+from .models import Ingredient, Recipe, RecipeIngredient
 import openai
 import os
 from django.contrib.auth import login, authenticate
@@ -150,12 +150,12 @@ def generate(request):
     # Get database ingredients
     db_ingredients_list = Ingredient.objects.filter(id__in=db_ingredients)
 
-    # Combine ingredients texts
+    # Prepare ingredient texts for the prompt
     ingredients_text = ", ".join([
-                                     f"{i.quantity} {i.unit} {i.name}" for i in db_ingredients_list
-                                 ] + [
-                                     f"{i['quantity']} {i['unit']} {i['name']}" for i in temp_ingredients
-                                 ])
+        f"{i.quantity} {i.unit} {i.name}" for i in db_ingredients_list
+    ] + [
+        f"{ing['quantity']} {ing['unit']} {ing['name']}" for ing in temp_ingredients
+    ])
 
     prompt = f"""
         Create a {diet_type} recipe for {servings} people using these ingredients: {ingredients_text}.
@@ -174,24 +174,20 @@ def generate(request):
                 ...
             ]
         }}
-        """
+    """
 
-    print(prompt)
     try:
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system",
-                 "content": "You are a helpful chef who creates recipes based on available ingredients."},
+                {"role": "system", "content": "You are a helpful chef who creates recipes based on available ingredients."},
                 {"role": "user", "content": prompt}
             ]
         )
         response_content = response.choices[0].message.content
         recipe_data = json.loads(response_content)
 
-        # Log the recipe data for debugging
-        print(recipe_data)
-
+        # Create the recipe without adding ingredients to user's owned ingredients
         recipe = Recipe.objects.create(
             user=request.user,
             title=recipe_data["title"],
@@ -200,22 +196,14 @@ def generate(request):
             instructions="\n".join(recipe_data.get("instructions", []))
         )
 
-        # Process ingredients and add to the recipe
+        # Process ingredients specifically for the recipe
         for ing in recipe_data["ingredients"]:
-            # Convert quantity to decimal format
-            ing["quantity"] = convert_to_decimal(ing["quantity"]) if ing["quantity"] not in ["to taste",
-                                                                                             "to your preference"] else "-1"
-
-            # Create or get the ingredient
-            ingredient, created = Ingredient.objects.get_or_create(
-                user=request.user,
+            RecipeIngredient.objects.create(
+                recipe=recipe,
                 name=ing["name"],
-                quantity=ing["quantity"],
+                quantity=convert_to_decimal(ing["quantity"]),
                 unit=ing["unit"]
             )
-            recipe.ingredients.add(ingredient)
-
-        recipe.save()  # Save the recipe after modifications
 
         return render(request, 'recipes/recipe_result.html', {'recipe': recipe})
 
