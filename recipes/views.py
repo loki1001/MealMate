@@ -139,6 +139,7 @@ def generate(request):
 
     prompt = f"Create a {diet_type} recipe for {servings} people using these ingredients: {ingredients_text}"
 
+    print(prompt)
     try:
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
