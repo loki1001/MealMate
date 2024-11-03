@@ -24,14 +24,42 @@
             <label class="block text-gray-700 text-sm font-bold mb-2" for="unit">
                 Unit
             </label>
-            <select class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                    id="unit" name="unit" required>
-                <option value="g">Grams (g)</option>
-                <option value="kg">Kilograms (kg)</option>
-                <option value="ml">Milliliters (ml)</option>
-                <option value="l">Liters (l)</option>
-                <option value="pcs">Pieces</option>
+            <select class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="unit" name="unit" required>
+                <optgroup label="Volume">
+                    <option value="tsp">Teaspoon (tsp)</option>
+                    <option value="tbsp">Tablespoon (tbsp)</option>
+                    <option value="fl_oz">Fluid Ounce (fl oz)</option>
+                    <option value="cup">Cup</option>
+                    <option value="pint">Pint</option>
+                    <option value="quart">Quart</option>
+                    <option value="l">Liter (L)</option>
+                    <option value="ml">Milliliter (mL)</option>
+                </optgroup>
+                <optgroup label="Weight">
+                    <option value="oz">Ounce (oz)</option>
+                    <option value="lb">Pound (lb)</option>
+                    <option value="g">Gram (g)</option>
+                    <option value="kg">Kilogram (kg)</option>
+                </optgroup>
+                <optgroup label="Count">
+                    <option value="pcs">Piece (e.g., eggs, apples)</option>
+                    <option value="slice">Slice (e.g., bread, cheese)</option>
+                </optgroup>
+                <optgroup label="Miscellaneous">
+                    <option value="dash">Dash</option>
+                    <option value="pinch">Pinch</option>
+                    <option value="block">Block</option>
+                    <option value="can">Can</option>
+                </optgroup>
+                <option value="custom">Custom Value</option>
             </select>
+        </div>
+        <div class="mb-4" id="custom-unit-container" style="display:none;">
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="custom_unit">
+                Custom Unit
+            </label>
+            <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                   id="custom_unit" type="text" name="custom_unit" placeholder="Enter custom unit here...">
         </div>
         <button class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" 
                 type="submit">
@@ -59,6 +87,20 @@
             <p class="text-gray-600">No ingredients added yet.</p>
         {% endif %}
     </div>
-
 </div>
+
+<script>
+document.getElementById('unit').addEventListener('change', function() {
+    const customUnitContainer = document.getElementById('custom-unit-container');
+    const customUnitInput = document.getElementById('custom_unit');
+
+    if (this.value === 'custom') {
+        customUnitContainer.style.display = 'block';
+        customUnitInput.setAttribute('name', 'unit'); // Change name to 'unit'
+    } else {
+        customUnitContainer.style.display = 'none';
+        customUnitInput.setAttribute('name', 'custom_unit'); // Reset name to 'custom_unit'
+    }
+});
+</script>
 {% endblock %}
