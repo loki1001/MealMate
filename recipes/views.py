@@ -1,7 +1,7 @@
 import json
 
 from django.conf import settings
-from django.core.checks import messages
+from django.contrib import messages
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
@@ -46,6 +46,17 @@ def my_items(request):
 
     ingredients = Ingredient.objects.filter(user=request.user)
     return render(request, 'recipes/my_items.html', {'ingredients': ingredients})
+
+
+@login_required(login_url='/login/')
+def delete_ingredient(request, ingredient_id):
+    try:
+        ingredient = Ingredient.objects.get(id=ingredient_id, user=request.user)
+        ingredient.delete()
+        messages.success(request, 'Ingredient deleted successfully.')
+    except Ingredient.DoesNotExist:
+        messages.error(request, 'Ingredient not found.')
+    return redirect('my_items')
 
 
 @login_required(login_url='/login/')
