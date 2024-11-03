@@ -2,7 +2,7 @@
 
 {% block content %}
 <div class="text-center">
-    <h1 class="text-4xl font-bold text-gray-800 mb-8">Welcome to Recipe Generator</h1>
+    <h1 class="text-4xl font-bold text-gray-800 mb-8">Welcome to Meal Mate</h1>
     <p class="text-xl text-gray-600 mb-8">Generate delicious recipes using ingredients you already have!</p>
     {% if user.is_authenticated %}
         <a href="{% url 'generate_recipe' %}" class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition duration-300">Start Generating Recipes</a>
