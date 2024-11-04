@@ -186,11 +186,13 @@ def generate(request):
         )
         response_content = response.choices[0].message.content
         recipe_data = json.loads(response_content)
+        print(recipe_data)
 
         # Create the recipe without adding ingredients to user's owned ingredients
         recipe = Recipe.objects.create(
             user=request.user,
             title=recipe_data["title"],
+            cook_time=recipe_data["cook_time"],
             diet_type=diet_type,
             servings=recipe_data["servings"],
             instructions="\n".join(recipe_data.get("instructions", []))

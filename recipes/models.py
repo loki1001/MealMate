@@ -15,6 +15,7 @@ class Recipe(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
     instructions = models.TextField()
+    cook_time = models.TextField()
     diet_type = models.CharField(max_length=50)
     servings = models.IntegerField()
     created_at = models.DateTimeField(auto_now_add=True)
