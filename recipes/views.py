@@ -245,3 +245,116 @@ def accept_recipe(request, recipe_id):
 
     # Redirect to the recipe's detail page
     return redirect('recipe_detail', recipe_id=recipe.id)
+
+
+@login_required(login_url='/login/')
+def reject_recipe(request, recipe_id):
+    # Get the rejected recipe by its ID or return 404 if not found
+    recipe = get_object_or_404(Recipe, id=recipe_id, user=request.user)
+
+    # Get ingredients from session
+    db_ingredients = request.session.get('db_ingredients', [])
+    temp_ingredients = request.session.get('temp_ingredients', [])
+    diet_type = request.session.get('diet_type')
+    servings = request.session.get('servings')
+
+    # Get database ingredients
+    db_ingredients_list = Ingredient.objects.filter(id__in=db_ingredients)
+
+    # Prepare ingredient texts for the prompt
+    ingredients_text = ", ".join([
+                                     f"{i.quantity} {i.unit} {i.name}" for i in db_ingredients_list
+                                 ] + [
+                                     f"{ing['quantity']} {ing['unit']} {ing['name']}" for ing in temp_ingredients
+                                 ])
+
+    # Get the details of the rejected recipe
+    rejected_recipe_title = recipe.title
+    rejected_recipe_instructions = recipe.instructions
+    rejected_recipe_ingredients = ", ".join([
+        f"{ri.quantity} {ri.unit} {ri.name}" for ri in recipe.recipe_ingredients.all()
+    ])
+
+    # Create the prompt for GPT, including the rejected recipe context
+    prompt = f"""
+        You are a talented chef who can create unique recipes based on a set of ingredients. 
+        The user has rejected the previous recipe, and they want a new one with the same ingredients.
+        Please avoid repeating the same recipe or using similar instructions to the previous one.
+
+        Here is the previously rejected recipe that the user did not like:
+        - Title: {rejected_recipe_title}
+        - Ingredients: {rejected_recipe_ingredients}
+        - Instructions: {rejected_recipe_instructions}
+
+        Now, please create a completely new and different {diet_type} recipe for {servings} people using these ingredients: {ingredients_text}.
+        Ensure that the recipe is distinct from the rejected one, provides clear, detailed steps, and avoids using vague terms like "to taste".
+        The recipe should include:
+        - A new title for the dish.
+        - A new list of ingredients (use decimal format for quantities).
+        - Clear cooking instructions.
+        - The number of servings and cook time.
+
+        Return the result in the following JSON format:
+        {{
+            "title": "New Dish Title",
+            "ingredients": [
+                {{"name": "ingredient_name", "quantity": "amount", "unit": "unit"}},
+                ...
+            ],
+            "servings": "number of servings",
+            "cook_time": "cooking time",
+            "instructions": [
+                "Step 1: Instruction",
+                ...
+            ]
+        }}
+    """
+
+    try:
+        # Call the GPT API to generate a new recipe
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",  # Make sure to use the correct model
+            messages=[
+                {"role": "system", "content": "You are a skilled chef who can create unique and creative recipes."},
+                {"role": "user", "content": prompt}
+            ]
+        )
+
+        # Parse the response from GPT
+        response_content = response.choices[0].message.content.strip()
+        if response_content.startswith('```json'):
+            response_content = response_content[7:].strip()  # Remove the leading ```json
+        if response_content.endswith('```'):
+            response_content = response_content[:-3].strip()  # Remove the trailing ```
+
+        # Try parsing the response as JSON
+        recipe_data = json.loads(response_content)
+
+        # Create the new recipe in the database
+        new_recipe = Recipe.objects.create(
+            user=request.user,
+            title=recipe_data["title"],
+            cook_time=recipe_data["cook_time"],
+            diet_type=diet_type,
+            servings=recipe_data["servings"],
+            instructions="\n".join(recipe_data.get("instructions", [])),
+            accepted=False  # Ensure this recipe is not accepted yet
+        )
+
+        # Process ingredients specifically for the new recipe
+        for ing in recipe_data["ingredients"]:
+            RecipeIngredient.objects.create(
+                recipe=new_recipe,
+                name=ing["name"],
+                quantity=convert_to_decimal(ing["quantity"]),
+                unit=ing["unit"]
+            )
+
+        # Redirect to the newly created recipe's details page
+        messages.success(request, "Recipe rejected. A new recipe has been generated!")
+        return redirect('recipe_detail', recipe_id=new_recipe.id)
+
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Failed to decode response'}, status=500)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
