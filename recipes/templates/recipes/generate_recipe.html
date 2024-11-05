@@ -35,7 +35,45 @@
             <h3 class="text-lg font-semibold">Add New Ingredient</h3>
             <input type="text" id="new_name" placeholder="Ingredient Name" class="border rounded w-full py-2 px-3 mb-2">
             <input type="number" step="0.01" id="new_quantity" placeholder="Quantity" class="border rounded w-full py-2 px-3 mb-2">
-            <input type="text" id="new_unit" placeholder="Unit (e.g., g, kg, ml)" class="border rounded w-full py-2 px-3 mb-2">
+            <div class="mb-6">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="new_unit">
+                    Unit
+                </label>
+                <select class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="new_unit" name="unit" required>
+                    <optgroup label="Volume">
+                        <option value="tsp">Teaspoon (tsp)</option>
+                        <option value="tbsp">Tablespoon (tbsp)</option>
+                        <option value="fl_oz">Fluid Ounce (fl oz)</option>
+                        <option value="cup">Cup</option>
+                        <option value="pint">Pint</option>
+                        <option value="quart">Quart</option>
+                        <option value="l">Liter (L)</option>
+                        <option value="ml">Milliliter (mL)</option>
+                    </optgroup>
+                    <optgroup label="Weight">
+                        <option value="oz">Ounce (oz)</option>
+                        <option value="lb">Pound (lb)</option>
+                        <option value="g">Gram (g)</option>
+                        <option value="kg">Kilogram (kg)</option>
+                    </optgroup>
+                    <optgroup label="Count">
+                        <option value="pcs">Piece (e.g., eggs, apples)</option>
+                        <option value="slice">Slice (e.g., bread, cheese)</option>
+                    </optgroup>
+                    <optgroup label="Miscellaneous">
+                        <option value="dash">Dash</option>
+                        <option value="pinch">Pinch</option>
+                        <option value="block">Block</option>
+                        <option value="can">Can</option>
+                    </optgroup>
+                    <option value="custom">Custom Value</option>
+                </select>
+            </div>
+
+            <!-- Custom Unit Input Field (initially hidden) -->
+            <div id="custom-unit-container" style="display: none;">
+                <input type="text" id="custom_unit" placeholder="Enter custom unit" class="border rounded w-full py-2 px-3 mb-2">
+            </div>
             <button type="button" onclick="addNewIngredient()" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
                 Add Ingredient
             </button>
@@ -96,8 +134,16 @@ function addIngredient() {
 function addNewIngredient() {
     const newName = document.getElementById('new_name').value.trim();
     const newQuantity = document.getElementById('new_quantity').value;
-    const newUnit = document.getElementById('new_unit').value.trim();
+    let newUnit = document.getElementById('new_unit').value.trim();
     const selectedIngredients = document.getElementById('selected-ingredients');
+
+    if (newUnit === 'custom') {
+        newUnit = document.getElementById('custom_unit').value.trim();
+        if (!newUnit) {
+            alert('Please enter a custom unit.');
+            return;
+        }
+    }
 
     if (newName && newQuantity && newUnit) {
         // Check for duplicates in temp ingredients
@@ -150,6 +196,18 @@ function updateHiddenInputs() {
     dbIngredientsInput.value = dbIngredients.join(',');
     tempIngredientsInput.value = JSON.stringify(tempIngredients);
 }
+document.getElementById('new_unit').addEventListener('change', function() {
+    const customUnitContainer = document.getElementById('custom-unit-container');
+    const customUnitInput = document.getElementById('custom_unit');
+
+    if (this.value === 'custom') {
+        customUnitContainer.style.display = 'block';
+        customUnitInput.setAttribute('name', 'new_unit'); // Change name to 'unit'
+    } else {
+        customUnitContainer.style.display = 'none';
+        customUnitInput.setAttribute('name', 'custom_unit'); // Reset name to 'custom_unit'
+    }
+});
 </script>
 
 {% endblock %}
