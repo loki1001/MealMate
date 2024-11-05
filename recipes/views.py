@@ -175,16 +175,21 @@ def generate(request):
             ]
         }}
     """
+    print(prompt)
 
     try:
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "You are a helpful chef who creates recipes based on available ingredients."},
                 {"role": "user", "content": prompt}
             ]
         )
         response_content = response.choices[0].message.content
+        if response_content.startswith('```json'):
+            response_content = response_content[7:].strip()  # Remove the leading ```json and any whitespace
+        if response_content.endswith('```'):
+            response_content = response_content[:-3].strip()  # Remove the trailing ```
         recipe_data = json.loads(response_content)
         print(recipe_data)
 
