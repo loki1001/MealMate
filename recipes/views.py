@@ -230,3 +230,18 @@ def recipe_detail(request, recipe_id):
     }
 
     return render(request, 'recipes/recipe_detail.html', context)
+
+@login_required(login_url='/login/')
+def accept_recipe(request, recipe_id):
+    # Get the recipe by its ID or return 404 if not found
+    recipe = get_object_or_404(Recipe, id=recipe_id, user=request.user)
+
+    # Update the accepted field to True
+    recipe.accepted = True
+    recipe.save()
+
+    # Add a success message
+    messages.success(request, f"Recipe '{recipe.title}' has been accepted!")
+
+    # Redirect to the recipe's detail page
+    return redirect('recipe_detail', recipe_id=recipe.id)

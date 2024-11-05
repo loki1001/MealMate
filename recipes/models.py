@@ -18,6 +18,7 @@ class Recipe(models.Model):
     cook_time = models.TextField()
     diet_type = models.CharField(max_length=50)
     servings = models.IntegerField()
+    accepted = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
