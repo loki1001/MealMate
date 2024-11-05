@@ -309,7 +309,7 @@ def reject_recipe(request, recipe_id):
             ]
         }}
     """
-
+    print(prompt)
     try:
         # Call the GPT API to generate a new recipe
         response = client.chat.completions.create(
@@ -352,7 +352,7 @@ def reject_recipe(request, recipe_id):
 
         # Redirect to the newly created recipe's details page
         messages.success(request, "Recipe rejected. A new recipe has been generated!")
-        return redirect('recipe_detail', recipe_id=new_recipe.id)
+        return render(request, 'recipes/recipe_result.html', {'recipe': new_recipe})
 
     except json.JSONDecodeError:
         return JsonResponse({'error': 'Failed to decode response'}, status=500)
