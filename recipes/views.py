@@ -3,7 +3,7 @@ import json
 
 from django.conf import settings
 from django.contrib import messages
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from .models import Ingredient, Recipe, RecipeIngredient
@@ -218,3 +218,15 @@ def generate(request):
         return JsonResponse({'error': 'Failed to decode response'}, status=500)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required(login_url='/login/')
+def recipe_detail(request, recipe_id):
+    # Get the recipe by its ID or return 404 if not found
+    recipe = get_object_or_404(Recipe, id=recipe_id, user=request.user)
+
+    context = {
+        'recipe': recipe
+    }
+
+    return render(request, 'recipes/recipe_detail.html', context)
