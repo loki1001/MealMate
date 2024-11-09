@@ -358,3 +358,10 @@ def reject_recipe(request, recipe_id):
         return JsonResponse({'error': 'Failed to decode response'}, status=500)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required(login_url='/login/')
+def my_recipes(request):
+    # Get all recipes saved by the current user
+    recipes = Recipe.objects.filter(user=request.user)
+    return render(request, 'recipes/my_recipes.html', {'recipes': recipes})

@@ -1,0 +1,28 @@
+<!-- templates/recipes/my_recipes.html -->
+{% extends "recipes/base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold text-center mb-6">My Recipes</h1>
+
+    {% if recipes %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            {% for recipe in recipes %}
+                <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+                    <div class="p-4">
+                        <h2 class="text-xl font-semibold text-gray-800">
+                            <a href="{% url 'recipe_detail' recipe.id %}" class="hover:underline">{{ recipe.title }}</a>
+                        </h2>
+                        <p class="text-gray-600 mt-2">Cook time: {{ recipe.cook_time }}</p>
+                        <a href="{% url 'recipe_detail' recipe.id %}" class="inline-block mt-4 px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600">
+                            View Recipe
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="text-center text-gray-500 mt-6">You don't have any recipes saved yet.</p>
+    {% endif %}
+</div>
+{% endblock %}
