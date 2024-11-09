@@ -431,3 +431,12 @@ def chatbot(request, recipe_id):
 
     else:
         return JsonResponse({"error": "Only POST requests are allowed"}, status=400)
+
+
+@login_required
+def clear_conversation(request, recipe_id):
+    conversation_key = f"conversation_{recipe_id}"
+    if conversation_key in request.session:
+        del request.session[conversation_key]
+
+    return redirect('recipe_detail', recipe_id=recipe_id)

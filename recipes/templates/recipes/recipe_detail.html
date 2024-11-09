@@ -55,6 +55,9 @@
                     Send
                 </button>
             </div>
+            <button onclick="clearConversation()" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mt-4">
+                Clear Conversation
+            </button>
         </div>
     </div>
 </div>
@@ -135,6 +138,20 @@
             appendMessage("AI", "Error: Could not connect to the server.");
         }
     }
+
+    function clearConversation() {
+        const chatbox = document.getElementById("chatbox");
+        chatbox.innerHTML = '';  // Clear the chatbox content
+
+        fetch("{% url 'clear_conversation' recipe.id %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": "{{ csrf_token }}",
+            },
+        })
+    }
+
 
     // Add event listener for Enter key
     document.getElementById("user-input").addEventListener("keypress", function(event) {
