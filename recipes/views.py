@@ -374,3 +374,39 @@ def delete_recipe(request, id):
         recipe.delete()
         messages.success(request, "Recipe deleted successfully.")
     return redirect('my_recipes')
+
+
+@login_required(login_url='/login/')
+def chatbot(request):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        user_message = data.get("message", "")
+
+        # Retrieve conversation history from session
+        conversation = request.session.get("conversation", [])
+
+        # Append the user's message to the conversation history
+        conversation.append({"role": "user", "content": user_message})
+        print(conversation)
+
+        # Send the conversation history to the OpenAI API
+        try:
+            response = client.chat.completions.create(
+                model="gpt-4o-mini",  # or "gpt-4" if available
+                messages=conversation
+            )
+            print(conversation)
+            bot_reply = response.choices[0].message.content.strip()
+
+            # Append bot's response to the conversation history
+            conversation.append({"role": "assistant", "content": bot_reply})
+
+            # Save the updated conversation history back to the session
+            request.session["conversation"] = conversation
+
+            return JsonResponse({"response": bot_reply})
+
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+    else:
+        return JsonResponse({"error": "Only POST requests are allowed"}, status=400)

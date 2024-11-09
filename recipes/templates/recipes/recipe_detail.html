@@ -37,5 +37,72 @@
             </form>
         </div>
     </div>
+
+    <!-- Chatbot Section -->
+    <div class="mt-10 p-6 bg-white shadow-md rounded-lg">
+        <h2 class="text-xl font-bold mb-4">Chat with AI Assistant</h2>
+        <div id="chatbox" class="h-80 overflow-y-auto p-4 border border-gray-300 rounded bg-gray-50">
+            <!-- Messages will appear here -->
+        </div>
+        <div class="flex">
+            <input type="text" id="user-input" placeholder="Ask a question..."
+                   class="w-full px-4 py-2 border border-gray-300 rounded-l focus:outline-none" />
+            <button onclick="sendMessage()"
+                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-r">
+                Send
+            </button>
+        </div>
+    </div>
 </div>
+
+<script>
+    function appendMessage(sender, message) {
+        const chatbox = document.getElementById("chatbox");
+        const messageElement = document.createElement("div");
+
+        // Apply classes based on sender (user or AI)
+        messageElement.classList.add("mb-2", "p-2", "rounded");
+
+        // Add classes dynamically based on sender
+        if (sender === "user") {
+            messageElement.classList.add("bg-blue-100", "text-right");
+        } else {
+            messageElement.classList.add("bg-gray-200", "text-left");
+        }
+
+        messageElement.innerText = `${sender === "user" ? "You" : "AI"}: ${message}`;
+        chatbox.appendChild(messageElement);
+        chatbox.scrollTop = chatbox.scrollHeight;
+    }
+
+
+    async function sendMessage() {
+        const userInput = document.getElementById("user-input");
+        const message = userInput.value.trim();
+        if (!message) return;
+
+        appendMessage("user", message);
+        userInput.value = "";
+
+        try {
+            const response = await fetch("{% url 'chatbot' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}",
+                },
+                body: JSON.stringify({ message: message }),
+            });
+
+            const data = await response.json();
+            if (data.response) {
+                appendMessage("AI", data.response);
+            } else if (data.error) {
+                appendMessage("AI", "Error: " + data.error);
+            }
+        } catch (error) {
+            appendMessage("AI", "Error: Could not connect to the server.");
+        }
+    }
+</script>
 {% endblock %}
