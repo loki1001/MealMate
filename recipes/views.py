@@ -159,7 +159,7 @@ def generate(request):
 
     prompt = f"""
         Create a {diet_type} recipe for {servings} people using these ingredients: {ingredients_text}.
-        Please ensure all ingredient quantities are specified in decimal format and avoid using terms like "to taste" or "to preference."
+        Please ensure all ingredient quantities are specified in decimal format with common kitchen units like cups, teaspoons, and tablespoons where appropriate and avoid using terms like "to taste" or "to preference."
         Return a JSON object with the following structure:
         {{
             "title": "Title of the dish",
@@ -305,7 +305,7 @@ def reject_recipe(request, recipe_id):
         - Instructions: {rejected_recipe_instructions}
 
         Now, please create a completely new and different {diet_type} recipe for {servings} people using these ingredients: {ingredients_text}.
-        Ensure that the recipe is distinct from the rejected one, provides clear, detailed steps, and avoids using vague terms like "to taste".
+        Ensure that the recipe is distinct from the rejected one, provides clear, detailed steps, while ensuring all ingredient quantities are specified in decimal format with common kitchen units like cups, teaspoons, and tablespoons where appropriate and avoid using terms like "to taste" or "to preference."
         The recipe should include:
         - A new title for the dish.
         - A new list of ingredients (use decimal format for quantities).
@@ -411,7 +411,7 @@ def chatbot(request, recipe_id):
         # Send the conversation history to the OpenAI API
         try:
             response = client.chat.completions.create(
-                model="gpt-4o-mini",  # or "gpt-4" if available
+                model="gpt-4o-mini",
                 messages=conversation
             )
 
