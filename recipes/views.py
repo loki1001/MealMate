@@ -228,9 +228,23 @@ def recipe_detail(request, recipe_id):
     conversation_key = f"conversation_{recipe_id}"
     conversation = request.session.get(conversation_key, [])
 
+    if not conversation:
+        recipe_context = f"Recipe Title: {recipe.title}\nIngredients:\n"
+        for ingredient in recipe.recipe_ingredients.all():
+            recipe_context += f"- {ingredient.quantity} {ingredient.unit} of {ingredient.name}\n"
+        recipe_context += f"Instructions:\n{recipe.instructions}"
+
+        # Add the recipe context as a "system" message
+        conversation.append({"role": "system", "content": recipe_context})
+
+    request.session[conversation_key] = conversation
+    user_ai_conversation = [
+        msg for msg in conversation if msg["role"] != "system"
+    ]
+
     context = {
         'recipe': recipe,
-        'conversation': conversation,
+        'conversation': user_ai_conversation,
     }
 
     return render(request, 'recipes/recipe_detail.html', context)
