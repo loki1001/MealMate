@@ -348,6 +348,8 @@ def reject_recipe(request, recipe_id):
         # Try parsing the response as JSON
         recipe_data = json.loads(response_content)
 
+        recipe.delete()
+
         # Create the new recipe in the database
         new_recipe = Recipe.objects.create(
             user=request.user,
