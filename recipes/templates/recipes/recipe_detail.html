@@ -79,6 +79,13 @@
         // Set chatbox height
         const chatboxHeight = recipeHeight - titleHeight - inputSection - padding;
         chatbox.style.height = `${chatboxHeight}px`;
+
+        const conversation = {{ conversation|safe }};  // Load the conversation from the template context
+
+        // Populate the chatbox with previous conversation
+        conversation.forEach(msg => {
+            appendMessage(msg.role, msg.content);
+        });
     });
 
     function appendMessage(sender, message) {

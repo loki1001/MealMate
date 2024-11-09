@@ -225,8 +225,12 @@ def recipe_detail(request, recipe_id):
     # Get the recipe by its ID or return 404 if not found
     recipe = get_object_or_404(Recipe, id=recipe_id, user=request.user)
 
+    conversation_key = f"conversation_{recipe_id}"
+    conversation = request.session.get(conversation_key, [])
+
     context = {
-        'recipe': recipe
+        'recipe': recipe,
+        'conversation': conversation,
     }
 
     return render(request, 'recipes/recipe_detail.html', context)
