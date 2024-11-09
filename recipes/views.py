@@ -365,3 +365,12 @@ def my_recipes(request):
     # Get all recipes saved by the current user
     recipes = Recipe.objects.filter(user=request.user)
     return render(request, 'recipes/my_recipes.html', {'recipes': recipes})
+
+
+@login_required(login_url='/login/')
+def delete_recipe(request, id):
+    if request.method == "POST":
+        recipe = get_object_or_404(Recipe, id=id)
+        recipe.delete()
+        messages.success(request, "Recipe deleted successfully.")
+    return redirect('my_recipes')
