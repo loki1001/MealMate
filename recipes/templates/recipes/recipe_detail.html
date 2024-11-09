@@ -1,56 +1,59 @@
 {% extends 'recipes/base.html' %}
 
 {% block content %}
-<div class="max-w-2xl mx-auto p-6">
+<div class="max-w-6xl mx-auto p-6">
     <h2 class="text-2xl font-bold mb-6 text-center">{{ recipe.title }}</h2>
 
-    <div class="bg-white shadow-md rounded-lg p-8 mb-4">
-        <h4 class="mt-4 text-lg font-semibold">Ingredients:</h4>
-        <ul class="list-disc list-inside pl-5">
-            {% for ingredient in recipe.recipe_ingredients.all %}
-                <li>{{ ingredient.quantity }} {{ ingredient.unit }} of {{ ingredient.name }}</li>
-            {% endfor %}
-        </ul>
+    <div class="flex gap-8">
+        <!-- Recipe Details Section -->
+        <div class="bg-white shadow-md rounded-lg p-8 flex-1">
+            <h4 class="mt-4 text-lg font-semibold">Ingredients:</h4>
+            <ul class="list-disc list-inside pl-5">
+                {% for ingredient in recipe.recipe_ingredients.all %}
+                    <li>{{ ingredient.quantity }} {{ ingredient.unit }} of {{ ingredient.name }}</li>
+                {% endfor %}
+            </ul>
 
-        <h4 class="mt-4 text-lg font-semibold">Instructions:</h4>
-        <div class="pl-5">
-            {{ recipe.instructions|linebreaks }}
+            <h4 class="mt-4 text-lg font-semibold">Instructions:</h4>
+            <div class="pl-5">
+                {{ recipe.instructions|linebreaks }}
+            </div>
+
+            <div class="mt-4">
+                <p><strong>Diet Type:</strong> {{ recipe.diet_type }}</p>
+                <p><strong>Servings:</strong> {{ recipe.servings }}</p>
+                <p><strong>Cook Time:</strong> {{ recipe.cook_time }}</p>
+            </div>
+
+            <div class="mt-6 flex justify-between items-center">
+                <a href="{% url 'home' %}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                    Back to Home
+                </a>
+
+                <!-- Delete Recipe Form -->
+                <form action="{% url 'delete_recipe' recipe.id %}" method="POST" onsubmit="return confirm('Are you sure you want to delete this recipe?');">
+                    {% csrf_token %}
+                    <button type="submit" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        Delete Recipe
+                    </button>
+                </form>
+            </div>
         </div>
 
-        <div class="mt-4">
-            <p><strong>Diet Type:</strong> {{ recipe.diet_type }}</p>
-            <p><strong>Servings:</strong> {{ recipe.servings }}</p>
-            <p><strong>Cook Time:</strong> {{ recipe.cook_time }}</p>
-        </div>
-
-        <div class="mt-6 flex justify-between items-center">
-            <a href="{% url 'home' %}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-                Back to Home
-            </a>
-
-            <!-- Delete Recipe Form -->
-            <form action="{% url 'delete_recipe' recipe.id %}" method="POST" onsubmit="return confirm('Are you sure you want to delete this recipe?');">
-                {% csrf_token %}
-                <button type="submit" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-                    Delete Recipe
+        <!-- Chatbot Section -->
+        <div class="bg-white shadow-md rounded-lg p-8 w-80 flex-shrink-0">
+            <h2 class="text-xl font-bold mb-4">Chat with AI Assistant</h2>
+            <div id="chatbox" class="h-80 overflow-y-auto p-4 border border-gray-300 rounded bg-gray-50">
+                <!-- Messages will appear here -->
+            </div>
+            <div class="flex">
+                <input type="text" id="user-input" placeholder="Ask a question..."
+                       class="w-full px-4 py-2 border border-gray-300 rounded-l focus:outline-none" />
+                <button onclick="sendMessage()"
+                        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-r">
+                    Send
                 </button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Chatbot Section -->
-    <div class="mt-10 p-6 bg-white shadow-md rounded-lg">
-        <h2 class="text-xl font-bold mb-4">Chat with AI Assistant</h2>
-        <div id="chatbox" class="h-80 overflow-y-auto p-4 border border-gray-300 rounded bg-gray-50">
-            <!-- Messages will appear here -->
-        </div>
-        <div class="flex">
-            <input type="text" id="user-input" placeholder="Ask a question..."
-                   class="w-full px-4 py-2 border border-gray-300 rounded-l focus:outline-none" />
-            <button onclick="sendMessage()"
-                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-r">
-                Send
-            </button>
+            </div>
         </div>
     </div>
 </div>
