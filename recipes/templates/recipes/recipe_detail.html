@@ -105,8 +105,11 @@
         appendMessage("user", message);
         userInput.value = "";
 
+        const recipeId = {{ recipe.id }};
+
         try {
-            const response = await fetch("{% url 'chatbot' %}", {
+            const chatbotUrl = "{% url 'chatbot' recipe.id %}";
+            const response = await fetch(chatbotUrl, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
