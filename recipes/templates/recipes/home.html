@@ -2,13 +2,135 @@
 {% extends 'recipes/base.html' %}
 
 {% block content %}
-<div class="text-center">
-    <h1 class="text-4xl font-bold text-gray-800 mb-8">Welcome to Meal Mate</h1>
-    <p class="text-xl text-gray-600 mb-8">Generate delicious recipes using ingredients you already have!</p>
-    {% if user.is_authenticated %}
-        <a href="{% url 'generate_recipe' %}" class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition duration-300">Start Generating Recipes</a>
-    {% else %}
-        <a href="{% url 'login' %}" class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition duration-300">Login to Start</a>
-    {% endif %}
+<div class="max-w-4xl mx-auto px-4">
+    <!-- Hero Section -->
+    <div class="text-center mb-12">
+        <h1 class="text-4xl font-bold text-gray-800 mb-4">Welcome to Meal Mate</h1>
+        <p class="text-xl text-gray-600 mb-8">Generate delicious recipes using ingredients you already have!</p>
+        {% if user.is_authenticated %}
+            <a href="{% url 'generate_recipe' %}" class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition duration-300">Start Generating Recipes</a>
+        {% else %}
+            <a href="{% url 'login' %}" class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition duration-300">Login to Start</a>
+        {% endif %}
+    </div>
+
+    <!-- How It Works Section -->
+    <div class="bg-white rounded-lg shadow-md p-8 mb-12">
+        <h2 class="text-2xl font-bold text-center mb-8">How It Works</h2>
+
+        <div class="grid md:grid-cols-3 gap-8">
+            <div class="text-center">
+                <div class="bg-green-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold mb-2">1. Add Your Ingredients</h3>
+                <p class="text-gray-600">Enter the ingredients you have available in your kitchen</p>
+            </div>
+
+            <div class="text-center">
+                <div class="bg-green-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold mb-2">2. Choose Your Options</h3>
+                <p class="text-gray-600">Select ingredients, dietary preferences, and number of servings</p>
+            </div>
+
+            <div class="text-center">
+                <div class="bg-green-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.121 15.536c-1.171 1.952-3.07 1.952-4.242 0-1.172-1.953-1.172-5.119 0-7.072 1.171-1.952 3.07-1.952 4.242 0M8 10.5h4m-4 3h4m9-1.5a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold mb-2">3. Get Recipe</h3>
+                <p class="text-gray-600">Choose between strict or flexible recipe generation</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recipe Generation Options Section -->
+    <div class="bg-white rounded-lg shadow-md p-8 mb-12">
+        <h2 class="text-2xl font-bold text-center mb-8">Recipe Generation Options</h2>
+
+        <div class="grid md:grid-cols-2 gap-8">
+            <div class="border rounded-lg p-6">
+                <div class="flex items-center mb-4">
+                    <div class="bg-green-100 rounded-full p-2 mr-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold">Strict Recipe</h3>
+                </div>
+                <ul class="list-disc list-inside text-gray-600 space-y-2">
+                    <li>Uses only your listed ingredients</li>
+                    <li>Adds only basic seasonings (salt, pepper)</li>
+                    <li>Perfect for using specific ingredients</li>
+                </ul>
+            </div>
+
+            <div class="border rounded-lg p-6">
+                <div class="flex items-center mb-4">
+                    <div class="bg-purple-100 rounded-full p-2 mr-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold">Flexible Recipe</h3>
+                </div>
+                <ul class="list-disc list-inside text-gray-600 space-y-2">
+                    <li>Uses your ingredients as a base</li>
+                    <li>Can add other ingredients</li>
+                    <li>Creates more complete dishes</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Smart Features Section -->
+    <div class="bg-white rounded-lg shadow-md p-8">
+        <h2 class="text-2xl font-bold text-center mb-8">Smart Features</h2>
+
+        <div class="grid md:grid-cols-2 gap-8">
+            <div class="border rounded-lg p-6">
+                <div class="flex items-center mb-4">
+                    <div class="bg-blue-100 rounded-full p-2 mr-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold">AI Recipe Assistant</h3>
+                </div>
+                <p class="text-gray-600 mb-4">Chat with our AI about any saved recipe to:</p>
+                <ul class="list-disc list-inside text-gray-600 space-y-2">
+                    <li>Ask cooking questions</li>
+                    <li>Get ingredient substitutions</li>
+                    <li>Clarify instructions</li>
+                    <li>Get cooking tips</li>
+                </ul>
+            </div>
+
+            <div class="border rounded-lg p-6">
+                <div class="flex items-center mb-4">
+                    <div class="bg-yellow-100 rounded-full p-2 mr-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold">Recipe Library</h3>
+                </div>
+                <p class="text-gray-600 mb-4">When you accept a recipe:</p>
+                <ul class="list-disc list-inside text-gray-600 space-y-2">
+                    <li>Automatically saved to your library</li>
+                    <li>Access your recipes anytime</li>
+                    <li>Keep track of favorite dishes</li>
+                    <li>Chat history preserved for each recipe</li>
+                </ul>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
