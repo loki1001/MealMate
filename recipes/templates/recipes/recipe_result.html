@@ -27,11 +27,10 @@
 
         <!-- Accept and Reject Buttons -->
         <div class="mt-6 flex justify-center gap-4">
-            <!-- Accept Button (Checkmark) -->
+            <!-- Accept Button -->
             <form action="{% url 'accept_recipe' recipe.id %}" method="POST">
                 {% csrf_token %}
-                <button type="submit" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex items-center">
-                    <!-- Feather Check Icon -->
+                <button type="submit" class="h-10 px-4 bg-green-500 hover:bg-green-700 text-white font-bold rounded focus:outline-none focus:shadow-outline flex items-center">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M20 6L9 17l-5-5" />
                     </svg>
@@ -39,15 +38,25 @@
                 </button>
             </form>
 
-            <!-- Reject Button (X) -->
+            <!-- Reject Button -->
             <form action="{% url 'reject_recipe' recipe.id %}" method="POST">
                 {% csrf_token %}
-                <button type="submit" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex items-center">
-                    <!-- Feather X Icon -->
+                <button type="submit" class="h-10 px-4 bg-red-500 hover:bg-red-700 text-white font-bold rounded focus:outline-none focus:shadow-outline flex items-center">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M18 6L6 18M6 6l12 12" />
                     </svg>
                     Reject Recipe
+                </button>
+            </form>
+
+            <!-- Flexible Recipe Button -->
+            <form action="{% url 'generate_flexible' %}" method="POST">
+                {% csrf_token %}
+                <button type="submit" class="h-10 px-4 bg-purple-500 hover:bg-purple-700 text-white font-bold rounded focus:outline-none focus:shadow-outline flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83" />
+                    </svg>
+                    Try Flexible
                 </button>
             </form>
         </div>

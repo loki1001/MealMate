@@ -22,15 +22,21 @@
         <h3 class="text-lg font-semibold mt-6">Number of Servings:</h3>
         <p>{{ servings }}</p>
 
-        <form method="POST" action="{% url 'generate' %}">
-            {% csrf_token %}
-            <input type="hidden" name="diet_type" value="{{ diet_type }}">
-            <input type="hidden" name="servings" value="{{ servings }}">
-            <input type="hidden" name="selected_ingredients" value="{{ ingredients|join:',' }}">
-            <button class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mt-4" type="submit">
-                Generate Recipe
-            </button>
-        </form>
+        <div class="flex gap-4 mt-6">
+            <form method="POST" action="{% url 'generate' %}">
+                {% csrf_token %}
+                <button class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="submit">
+                    Generate Recipe
+                </button>
+            </form>
+
+            <form method="POST" action="{% url 'generate_flexible' %}">
+                {% csrf_token %}
+                <button class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="submit">
+                    Generate Flexible Recipe
+                </button>
+            </form>
+        </div>
     </div>
 </div>
 {% endblock %}

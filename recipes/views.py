@@ -139,6 +139,7 @@ def review(request):
         return render(request, 'recipes/review.html', context)
     return redirect('choose_servings')
 
+
 client = openai.OpenAI(api_key=settings.OPENAI_API_KEY)
 @login_required(login_url='/login/')
 def generate(request):
@@ -449,3 +450,87 @@ def clear_conversation(request, recipe_id):
         del request.session[conversation_key]
 
     return redirect('recipe_detail', recipe_id=recipe_id)
+
+
+@login_required(login_url='/login/')
+def generate_flexible(request):
+    db_ingredients = request.session.get('db_ingredients', [])
+    temp_ingredients = request.session.get('temp_ingredients', [])
+    diet_type = request.session.get('diet_type')
+    servings = request.session.get('servings')
+
+    # Get database ingredients
+    db_ingredients_list = Ingredient.objects.filter(id__in=db_ingredients)
+
+    # Prepare ingredient texts for the prompt
+    ingredients_text = ", ".join([
+                                     f"{i.quantity} {i.unit} {i.name}" for i in db_ingredients_list
+                                 ] + [
+                                     f"{ing['quantity']} {ing['unit']} {ing['name']}" for ing in temp_ingredients
+                                 ])
+
+    prompt = f"""
+        Create a {diet_type} recipe for {servings} people incorporating these ingredients: {ingredients_text}.
+
+        Guidelines:
+        1. Try to use as many of the provided ingredients as possible
+        2. You can add common ingredients and seasonings to create a complete recipe
+        3. Please ensure all ingredient quantities are specified in decimal format with common kitchen units like cups, teaspoons, and tablespoons where appropriate and avoid using terms like "to taste" or "to preference."
+        4. Any additional ingredients should enhance the recipe while keeping the provided ingredients as the main components
+
+        Return a JSON object with the following structure:
+        {{
+            "title": "Title of the dish",
+            "ingredients": [
+                {{"name": "ingredient_name", "quantity": "amount", "unit": "unit"}},
+                ...
+            ],
+            "servings": "number of servings",
+            "cook_time": "cooking time",
+            "instructions": [
+                "Step 1: instruction",
+                ...
+            ]
+        }}
+    """
+    print(prompt)
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system",
+                 "content": "You are a creative chef who creates delicious recipes incorporating available ingredients while adding complementary ingredients when needed."},
+                {"role": "user", "content": prompt}
+            ]
+        )
+        response_content = response.choices[0].message.content
+        if response_content.startswith('```json'):
+            response_content = response_content[7:].strip()
+        if response_content.endswith('```'):
+            response_content = response_content[:-3].strip()
+        recipe_data = json.loads(response_content)
+
+        recipe = Recipe.objects.create(
+            user=request.user,
+            title=recipe_data["title"],
+            cook_time=recipe_data["cook_time"],
+            diet_type=diet_type,
+            servings=recipe_data["servings"],
+            instructions="\n".join(recipe_data.get("instructions", [])),
+        )
+
+        for ing in recipe_data["ingredients"]:
+            RecipeIngredient.objects.create(
+                recipe=recipe,
+                name=ing["name"],
+                quantity=convert_to_decimal(ing["quantity"]),
+                unit=ing["unit"]
+            )
+
+        return render(request, 'recipes/recipe_result.html', {'recipe': recipe})
+
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Failed to decode response'}, status=500)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
