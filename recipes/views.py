@@ -158,8 +158,14 @@ def generate(request):
     ])
 
     prompt = f"""
-        Create a {diet_type} recipe for {servings} people using these ingredients: {ingredients_text}.
-        Please ensure all ingredient quantities are specified in decimal format with common kitchen units like cups, teaspoons, and tablespoons where appropriate and avoid using terms like "to taste" or "to preference."
+        Create a {diet_type} recipe for {servings} people using these main ingredients: {ingredients_text}.
+        
+        IMPORTANT CONSTRAINTS:
+        1. You MUST use ALL the provided ingredients in the recipe
+        2. You can ONLY add salt, pepper, water, and oil as additional ingredients
+        3. DO NOT add any other ingredients not listed (no vegetables, herbs, or other additions) unless absolutely essential for the recipe
+        4. Please ensure all ingredient quantities are specified in decimal format with common kitchen units like cups, teaspoons, and tablespoons where appropriate and avoid using terms like "to taste" or "to preference."
+        
         Return a JSON object with the following structure:
         {{
             "title": "Title of the dish",
