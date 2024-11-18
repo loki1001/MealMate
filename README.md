@@ -138,7 +138,7 @@ Visit `http://127.0.0.1:8000` in your browser.
 4. Save favorite recipes to your library
 
 ### Recipe Assistant Features
-- Ask questions about cooking techniques
-- Request ingredient substitutions
-- Get clarification on instructions
-- Receive cooking tips and tricks
+1. Ask questions about cooking techniques
+2. Request ingredient substitutions
+3. Get clarification on instructions
+4. Receive cooking tips and tricks
