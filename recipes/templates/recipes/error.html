@@ -1,33 +1,44 @@
+<!-- templates/recipes/choose_servings.html -->
+
+<!-- Extend the base template for consistent layout and styling -->
 {% extends 'recipes/base.html' %}
+
 {% block content %}
 <div class="w-full max-w-2xl mx-auto p-6">
+    <!-- Centered card for error message display -->
     <div class="bg-white rounded-lg shadow-lg p-8 text-center">
-        <!-- Error Icon -->
+
+        <!-- Error Icon Section -->
         <div class="flex items-center justify-center mb-6">
+            <!-- Red error icon inside a circular background -->
             <div class="bg-red-100 p-3 rounded-full">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-red-600" fill="none" viewbox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
             </div>
         </div>
-        
+
         <!-- Error Title -->
         <h2 class="text-2xl font-bold text-gray-800 mb-4">
+            <!-- Display custom error title or default text if not provided -->
             {{ error_title|default:"Recipe Generation Failed" }}
         </h2>
-        
+
         <!-- Error Message -->
         <p class="text-gray-600 mb-6">
+            <!-- Display custom error message or default text if not provided -->
             {{ error_message|default:"We couldn't generate your recipe at this moment. This could be due to a temporary issue." }}
         </p>
-        
-        <!-- Suggestions Box -->
+
+        <!-- Suggestions Section -->
         <div class="bg-gray-50 rounded-lg p-4 mb-6">
+            <!-- Heading for suggestions -->
             <h3 class="font-semibold text-gray-700 mb-3">
                 Suggestions:
             </h3>
             <ul class="text-left space-y-2">
                 {% if suggestions %}
+                    <!-- Display a list of suggestions provided dynamically -->
                     {% for suggestion in suggestions %}
                         <li class="flex items-start text-gray-600">
                             <span class="mr-2">•</span>
@@ -35,6 +46,7 @@
                         </li>
                     {% endfor %}
                 {% else %}
+                    <!-- Default suggestions if none are provided -->
                     <li class="flex items-start text-gray-600">
                         <span class="mr-2">•</span>
                         Check if all ingredients are properly formatted
@@ -50,20 +62,24 @@
                 {% endif %}
             </ul>
         </div>
-        
-        <!-- Action Buttons -->
+
+        <!-- Action Buttons Section -->
         <div class="flex justify-center gap-4">
+            <!-- Form for retrying the recipe generation -->
             <form method="POST" action="{{ retry_url|default:request.path }}">
-                {% csrf_token %}
+                {% csrf_token %} <!-- CSRF token for security -->
                 <button type="submit" class="inline-flex items-center px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-medium rounded-lg transition-colors duration-200">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" fill="none" viewbox="0 0 24 24" stroke="currentColor">
+                    <!-- Retry icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
-                    Try Again
+                    Try Again <!-- Retry button text -->
                 </button>
             </form>
+
+            <!-- Link to restart the recipe generation process -->
             <a href="{% url 'generate_recipe' %}" class="inline-flex items-center px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium rounded-lg transition-colors duration-200">
-                Start Over
+                Start Over <!-- Start Over button text -->
             </a>
         </div>
     </div>

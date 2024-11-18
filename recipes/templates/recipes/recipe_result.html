@@ -7,6 +7,7 @@
     <div class="bg-white shadow-md rounded-lg p-8 mb-4">
         <h3 class="text-xl font-semibold">{{ recipe.title }}</h3>
 
+        <!-- Ingredients Section -->
         <h4 class="mt-4 text-lg font-semibold">Ingredients:</h4>
         <ul class="list-disc list-inside pl-5">
             {% for ingredient in recipe.recipe_ingredients.all %}
@@ -14,20 +15,22 @@
             {% endfor %}
         </ul>
 
+        <!-- Instructions Section -->
         <h4 class="mt-4 text-lg font-semibold">Instructions:</h4>
         <div class="pl-5">
             {{ recipe.instructions|linebreaks }}
         </div>
 
+        <!-- Recipe Details -->
         <div class="mt-4">
             <p><strong>Diet Type:</strong> {{ recipe.diet_type }}</p>
             <p><strong>Servings:</strong> {{ recipe.servings }}</p>
             <p><strong>Cook Time:</strong> {{ recipe.cook_time }}</p>
         </div>
 
-        <!-- Accept and Reject Buttons -->
+        <!-- Accept and Reject Buttons Section -->
         <div class="mt-6 flex justify-center gap-4">
-            <!-- Accept Button -->
+            <!-- Accept Button to approve the recipe -->
             <form action="{% url 'accept_recipe' recipe.id %}" method="POST">
                 {% csrf_token %}
                 <button type="submit" class="h-10 px-4 bg-green-500 hover:bg-green-700 text-white font-bold rounded focus:outline-none focus:shadow-outline flex items-center">
@@ -38,7 +41,7 @@
                 </button>
             </form>
 
-            <!-- Reject Button -->
+            <!-- Reject Button to reject the recipe -->
             <form action="{% url 'reject_recipe' recipe.id %}" method="POST">
                 {% csrf_token %}
                 <button type="submit" class="h-10 px-4 bg-red-500 hover:bg-red-700 text-white font-bold rounded focus:outline-none focus:shadow-outline flex items-center">
@@ -49,7 +52,7 @@
                 </button>
             </form>
 
-            <!-- Flexible Recipe Button -->
+            <!-- Flexible Recipe Button to generate a flexible recipe -->
             <form action="{% url 'generate_flexible' %}" method="POST">
                 {% csrf_token %}
                 <button type="submit" class="h-10 px-4 bg-purple-500 hover:bg-purple-700 text-white font-bold rounded focus:outline-none focus:shadow-outline flex items-center">
@@ -61,6 +64,7 @@
             </form>
         </div>
 
+        <!-- Back to Home Button -->
         <a href="{% url 'home' %}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mt-4 inline-block">
             Back to Home
         </a>

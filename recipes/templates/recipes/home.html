@@ -3,22 +3,26 @@
 
 {% block content %}
 <div class="max-w-4xl mx-auto px-4">
-    <!-- Hero Section -->
+    <!-- Hero Section: Welcomes the user and gives options based on authentication status -->
     <div class="text-center mb-12">
         <h1 class="text-4xl font-bold text-gray-800 mb-4">Welcome to Meal Mate</h1>
         <p class="text-xl text-gray-600 mb-8">Generate delicious recipes using ingredients you already have!</p>
         {% if user.is_authenticated %}
+            <!-- Button for authenticated users to start generating recipes -->
             <a href="{% url 'generate_recipe' %}" class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition duration-300">Start Generating Recipes</a>
         {% else %}
+            <!-- Button for non-authenticated users to log in -->
             <a href="{% url 'login' %}" class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition duration-300">Login to Start</a>
         {% endif %}
     </div>
 
-    <!-- How It Works Section -->
+    <!-- How It Works Section: Explains the steps involved in using the service -->
     <div class="bg-white rounded-lg shadow-md p-8 mb-12">
         <h2 class="text-2xl font-bold text-center mb-8">How It Works</h2>
 
+        <!-- Step-by-step explanation of the process -->
         <div class="grid md:grid-cols-3 gap-8">
+            <!-- Step 1: Adding ingredients -->
             <div class="text-center">
                 <div class="bg-green-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -29,6 +33,7 @@
                 <p class="text-gray-600">Enter the ingredients you have available in your kitchen</p>
             </div>
 
+            <!-- Step 2: Choose options for recipe -->
             <div class="text-center">
                 <div class="bg-green-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -39,6 +44,7 @@
                 <p class="text-gray-600">Select ingredients, dietary preferences, and number of servings</p>
             </div>
 
+            <!-- Step 3: Get recipe -->
             <div class="text-center">
                 <div class="bg-green-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -51,11 +57,13 @@
         </div>
     </div>
 
-    <!-- Recipe Generation Options Section -->
+    <!-- Recipe Generation Options Section: Allows the user to select recipe preferences -->
     <div class="bg-white rounded-lg shadow-md p-8 mb-12">
         <h2 class="text-2xl font-bold text-center mb-8">Recipe Generation Options</h2>
 
+        <!-- Strict and Flexible Recipe Options -->
         <div class="grid md:grid-cols-2 gap-8">
+            <!-- Strict Recipe option -->
             <div class="border rounded-lg p-6">
                 <div class="flex items-center mb-4">
                     <div class="bg-green-100 rounded-full p-2 mr-4">
@@ -72,6 +80,7 @@
                 </ul>
             </div>
 
+            <!-- Flexible Recipe option -->
             <div class="border rounded-lg p-6">
                 <div class="flex items-center mb-4">
                     <div class="bg-purple-100 rounded-full p-2 mr-4">
@@ -83,7 +92,7 @@
                 </div>
                 <ul class="list-disc list-inside text-gray-600 space-y-2">
                     <li>Uses your ingredients as a base</li>
-                    <li>Can add other ingredients</li>
+                    <li>Experiment with new flavors</li>
                     <li>Creates more complete dishes</li>
                 </ul>
             </div>
@@ -92,10 +101,14 @@
 
     <!-- Smart Features Section -->
     <div class="bg-white rounded-lg shadow-md p-8">
+        <!-- Section Title -->
         <h2 class="text-2xl font-bold text-center mb-8">Smart Features</h2>
 
+        <!-- Features Grid Section -->
         <div class="grid md:grid-cols-2 gap-8">
+            <!-- AI Recipe Assistant Feature -->
             <div class="border rounded-lg p-6">
+                <!-- Icon and Title -->
                 <div class="flex items-center mb-4">
                     <div class="bg-blue-100 rounded-full p-2 mr-4">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -104,6 +117,7 @@
                     </div>
                     <h3 class="text-lg font-semibold">AI Recipe Assistant</h3>
                 </div>
+                <!-- Description and List of AI Recipe Assistant Features -->
                 <p class="text-gray-600 mb-4">Chat with our AI about any saved recipe to:</p>
                 <ul class="list-disc list-inside text-gray-600 space-y-2">
                     <li>Ask cooking questions</li>
@@ -113,7 +127,9 @@
                 </ul>
             </div>
 
+            <!-- Recipe Library Feature -->
             <div class="border rounded-lg p-6">
+                <!-- Icon and Title -->
                 <div class="flex items-center mb-4">
                     <div class="bg-yellow-100 rounded-full p-2 mr-4">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -122,6 +138,7 @@
                     </div>
                     <h3 class="text-lg font-semibold">Recipe Library</h3>
                 </div>
+                <!-- Description and List of Recipe Library Features -->
                 <p class="text-gray-600 mb-4">When you accept a recipe:</p>
                 <ul class="list-disc list-inside text-gray-600 space-y-2">
                     <li>Automatically saved to your library</li>

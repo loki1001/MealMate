@@ -1,26 +1,41 @@
 <!-- templates/recipes/choose_diet.html -->
+
+<!-- Extends the base template to reuse the overall structure and styles -->
 {% extends 'recipes/base.html' %}
 
 {% block content %}
+<!-- Main content block starts here -->
 <div class="max-w-2xl mx-auto">
+    <!-- Heading for the page -->
     <h2 class="text-2xl font-bold mb-6">Choose Diet Type</h2>
 
+    <!-- Form for selecting the diet type -->
     <form method="POST" action="{% url 'choose_servings' %}" class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+        <!-- CSRF token for security to prevent cross-site request forgery -->
         {% csrf_token %}
         <div class="mb-4">
+            <!-- Label for the diet type dropdown -->
             <label class="block text-gray-700 text-sm font-bold mb-2" for="diet_type">
                 Diet Type
             </label>
+            <!-- Dropdown menu for selecting the diet type -->
             <select name="diet_type" id="diet_type" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                <!-- Option for Vegetarian diet -->
                 <option value="vegetarian">Vegetarian</option>
+                <!-- Option for Vegan diet -->
                 <option value="vegan">Vegan</option>
+                <!-- Option for Gluten-Free diet -->
                 <option value="gluten_free">Gluten Free</option>
+                <!-- Option for Keto diet -->
                 <option value="keto">Keto</option>
+                <!-- Option for Paleo diet -->
                 <option value="paleo">Paleo</option>
+                <!-- Option for no specific diet -->
                 <option value="none">None</option>
             </select>
         </div>
 
+        <!-- Submit button to proceed to the next step -->
         <button class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="submit">
             Next
         </button>

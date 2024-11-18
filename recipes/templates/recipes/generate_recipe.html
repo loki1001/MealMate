@@ -3,42 +3,57 @@
 
 {% block content %}
 <div class="max-w-2xl mx-auto">
+    <!-- Page Title -->
     <h2 class="text-2xl font-bold mb-6">Choose Ingredients</h2>
-    
+
+    <!-- Form to select or add ingredients -->
     <form method="POST" action="{% url 'choose_diet' %}" class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
         {% csrf_token %}
-        
+
+        <!-- Dropdown to select ingredients from the database -->
         <div class="mb-4">
             <label class="block text-gray-700 text-sm font-bold mb-2" for="ingredient-select">
                 Select Ingredient
             </label>
+            <!-- Dropdown for selecting ingredients -->
             <select id="ingredient-select" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" onchange="addIngredient()">
                 <option value="" disabled selected>Select an ingredient</option>
                 {% for ingredient in ingredients %}
-                    <option value="{{ ingredient.id }}" data-name="{{ ingredient.name }}" data-quantity="{{ ingredient.quantity }}" data-unit="{{ ingredient.unit }}">{{ ingredient.name }} - {{ ingredient.quantity }} {{ ingredient.unit }}</option>
+                    <!-- Populate dropdown with ingredients from the database -->
+                    <option value="{{ ingredient.id }}" data-name="{{ ingredient.name }}" data-quantity="{{ ingredient.quantity }}" data-unit="{{ ingredient.unit }}">
+                        {{ ingredient.name }} - {{ ingredient.quantity }} {{ ingredient.unit }}
+                    </option>
                 {% endfor %}
             </select>
         </div>
 
+        <!-- Display selected ingredients -->
         <h3 class="text-lg font-semibold mt-4">Selected Ingredients</h3>
         <ul id="selected-ingredients" class="list-disc pl-5 mb-4"></ul>
 
-        <!-- Hidden inputs for both types of ingredients -->
+        <!-- Hidden inputs to store selected ingredients -->
         <input type="hidden" id="db-ingredients-input" name="db_ingredients" value="">
         <input type="hidden" id="temp-ingredients-input" name="temp_ingredients" value="">
 
+        <!-- Button to toggle the form for adding a new ingredient -->
         <button type="button" onclick="document.getElementById('add-ingredient').classList.toggle('hidden');" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mb-4">
             Add New Ingredient
         </button>
 
+        <!-- Form for adding a new ingredient -->
         <div id="add-ingredient" class="bg-gray-100 p-4 rounded hidden mb-4">
             <h3 class="text-lg font-semibold">Add New Ingredient</h3>
+
+            <!-- Input fields for ingredient details -->
             <input type="text" id="new_name" placeholder="Ingredient Name" class="border rounded w-full py-2 px-3 mb-2">
             <input type="number" step="0.01" id="new_quantity" placeholder="Quantity" class="border rounded w-full py-2 px-3 mb-2">
+
+            <!-- Dropdown to select the unit for the new ingredient -->
             <div class="mb-6">
                 <label class="block text-gray-700 text-sm font-bold mb-2" for="new_unit">
                     Unit
                 </label>
+                <!-- Dropdown for selecting units -->
                 <select class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="new_unit" name="unit" required>
                     <optgroup label="Volume">
                         <option value="tsp">Teaspoon (tsp)</option>
@@ -70,15 +85,19 @@
                 </select>
             </div>
 
-            <!-- Custom Unit Input Field (initially hidden) -->
+            <!-- Input field for custom unit (hidden by default) -->
             <div id="custom-unit-container" style="display: none;">
+                <!-- Input for entering a custom unit -->
                 <input type="text" id="custom_unit" placeholder="Enter custom unit" class="border rounded w-full py-2 px-3 mb-2">
             </div>
+
+            <!-- Button to add the new ingredient -->
             <button type="button" onclick="addNewIngredient()" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
                 Add Ingredient
             </button>
         </div>
 
+        <!-- Submit button to proceed -->
         <button class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="submit">
             Next
         </button>
@@ -86,9 +105,11 @@
 </div>
 
 <script>
-let tempIngredients = [];
-let dbIngredients = [];
+/* JavaScript to manage adding ingredients */
+let tempIngredients = []; // Temporary storage for newly added ingredients
+let dbIngredients = []; // Storage for selected database ingredients
 
+// Add selected ingredient from the dropdown
 function addIngredient() {
     const select = document.getElementById('ingredient-select');
     const selectedIngredients = document.getElementById('selected-ingredients');
@@ -100,19 +121,20 @@ function addIngredient() {
         const unit = selectedOption.getAttribute('data-unit');
         const id = select.value;
 
-        // Check for duplicates
+        // Prevent duplicate selection
         if (dbIngredients.includes(id)) {
             alert('This ingredient has already been selected.');
             return;
         }
 
+        // Add ingredient to the selected list
         const li = document.createElement('li');
         li.textContent = `${name} - ${quantity} ${unit}`;
         li.dataset.id = id;
         li.dataset.type = 'db';
         selectedIngredients.appendChild(li);
 
-        // Add remove button
+        // Add remove button for the ingredient
         const removeBtn = document.createElement('button');
         removeBtn.textContent = '×';
         removeBtn.className = 'ml-2 text-red-500 hover:text-red-700';
@@ -124,6 +146,7 @@ function addIngredient() {
         };
         li.appendChild(removeBtn);
 
+        // Update storage and disable selected option
         dbIngredients.push(id);
         updateHiddenInputs();
         selectedOption.disabled = true;
@@ -131,6 +154,7 @@ function addIngredient() {
     }
 }
 
+// Add a new ingredient manually
 function addNewIngredient() {
     const newName = document.getElementById('new_name').value.trim();
     const newQuantity = document.getElementById('new_quantity').value;
@@ -146,26 +170,22 @@ function addNewIngredient() {
     }
 
     if (newName && newQuantity && newUnit) {
-        // Check for duplicates in temp ingredients
+        // Prevent duplicate manual entries
         if (tempIngredients.some(ing => ing.name === newName)) {
             alert('This ingredient has already been added.');
             return;
         }
 
-        const tempIngredient = {
-            name: newName,
-            quantity: newQuantity,
-            unit: newUnit
-        };
-
+        const tempIngredient = { name: newName, quantity: newQuantity, unit: newUnit };
         tempIngredients.push(tempIngredient);
 
+        // Add ingredient to the list
         const li = document.createElement('li');
         li.textContent = `${newName} - ${newQuantity} ${newUnit}`;
         li.dataset.type = 'temp';
         li.dataset.index = tempIngredients.length - 1;
 
-        // Add remove button
+        // Add remove button for the ingredient
         const removeBtn = document.createElement('button');
         removeBtn.textContent = '×';
         removeBtn.className = 'ml-2 text-red-500 hover:text-red-700';
@@ -189,23 +209,33 @@ function addNewIngredient() {
     }
 }
 
+// Update hidden inputs to store ingredients data
 function updateHiddenInputs() {
+    // Get the hidden input elements that store database and temporary ingredients
     const dbIngredientsInput = document.getElementById('db-ingredients-input');
     const tempIngredientsInput = document.getElementById('temp-ingredients-input');
 
+    // Join the database ingredient IDs into a comma-separated string and assign to the hidden input
     dbIngredientsInput.value = dbIngredients.join(',');
+
+    // Convert the temporary ingredients array to a JSON string and assign to the hidden input
     tempIngredientsInput.value = JSON.stringify(tempIngredients);
 }
+
+// Event listener to show custom unit input when "custom" is selected in the dropdown
 document.getElementById('new_unit').addEventListener('change', function() {
+    // Get the container and input field for custom units
     const customUnitContainer = document.getElementById('custom-unit-container');
     const customUnitInput = document.getElementById('custom_unit');
 
+    // If "custom" unit is selected, show the input field for custom unit
     if (this.value === 'custom') {
         customUnitContainer.style.display = 'block';
-        customUnitInput.setAttribute('name', 'new_unit'); // Change name to 'unit'
+        customUnitInput.setAttribute('name', 'new_unit'); // Change name to 'unit' for submission
     } else {
+        // Otherwise, hide the input field for custom unit
         customUnitContainer.style.display = 'none';
-        customUnitInput.setAttribute('name', 'custom_unit'); // Reset name to 'custom_unit'
+        customUnitInput.setAttribute('name', 'custom_unit'); // Reset name to 'custom_unit' for form submission
     }
 });
 </script>

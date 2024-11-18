@@ -3,26 +3,34 @@
 
 {% block content %}
 <div class="max-w-2xl mx-auto">
+    <!-- Title for the page -->
     <h2 class="text-2xl font-bold mb-6">Review Your Choices</h2>
 
     <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+        <!-- Section for displaying the selected ingredients -->
         <h3 class="text-lg font-semibold mb-4">Selected Ingredients:</h3>
         <ul class="list-disc list-inside">
             {% for ingredient in db_ingredients %}
+                <!-- Displaying each ingredient from the database -->
                 <li>{{ ingredient.name }} - {{ ingredient.quantity }} {{ ingredient.unit }}</li>
             {% endfor %}
             {% for ingredient in temp_ingredients %}
+                <!-- Displaying each temporary ingredient -->
                 <li>{{ ingredient.name }} - {{ ingredient.quantity }} {{ ingredient.unit }}</li>
             {% endfor %}
         </ul>
 
+        <!-- Section for displaying the selected diet type -->
         <h3 class="text-lg font-semibold mt-6">Diet Type:</h3>
         <p>{{ diet_type }}</p>
 
+        <!-- Section for displaying the number of servings -->
         <h3 class="text-lg font-semibold mt-6">Number of Servings:</h3>
         <p>{{ servings }}</p>
 
+        <!-- Form buttons for generating the recipe -->
         <div class="flex gap-4 mt-6">
+            <!-- Form to generate the regular recipe -->
             <form method="POST" action="{% url 'generate' %}">
                 {% csrf_token %}
                 <button class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="submit">
@@ -30,6 +38,7 @@
                 </button>
             </form>
 
+            <!-- Form to generate a flexible recipe -->
             <form method="POST" action="{% url 'generate_flexible' %}">
                 {% csrf_token %}
                 <button class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="submit">

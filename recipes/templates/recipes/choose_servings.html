@@ -1,19 +1,28 @@
 <!-- templates/recipes/choose_servings.html -->
+
+<!-- Extends the base template to reuse the structure and layout -->
 {% extends 'recipes/base.html' %}
 
 {% block content %}
+<!-- Main content block starts here -->
 <div class="max-w-2xl mx-auto">
+    <!-- Heading for the page -->
     <h2 class="text-2xl font-bold mb-6">Choose Servings</h2>
 
+    <!-- Form for selecting the number of servings -->
     <form method="POST" action="{% url 'review' %}" class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+        <!-- CSRF token for security to prevent cross-site request forgery -->
         {% csrf_token %}
         <div class="mb-4">
+            <!-- Label for the input field for number of servings -->
             <label class="block text-gray-700 text-sm font-bold mb-2" for="servings">
                 Number of Servings
             </label>
+            <!-- Input field for entering the number of servings -->
             <input type="number" name="servings" id="servings" min="1" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
         </div>
 
+        <!-- Submit button to proceed to the review step -->
         <button class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="submit">
             Review
         </button>

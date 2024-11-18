@@ -2,30 +2,42 @@
 {% extends 'recipes/base.html' %}
 
 {% block content %}
+<!-- Main content container with a maximum width -->
 <div class="max-w-2xl mx-auto">
+
+    <!-- Page Title -->
     <h2 class="text-2xl font-bold mb-6">My Ingredients</h2>
-    
+
+    <!-- Ingredient Input Form -->
     <form method="POST" class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+        <!-- CSRF Token for security -->
         {% csrf_token %}
+
+        <!-- Ingredient Name Field -->
         <div class="mb-4">
             <label class="block text-gray-700 text-sm font-bold mb-2" for="name">
                 Ingredient Name
             </label>
-            <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
+            <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                    id="name" type="text" name="name" required>
         </div>
+
+        <!-- Ingredient Quantity Field -->
         <div class="mb-4">
             <label class="block text-gray-700 text-sm font-bold mb-2" for="quantity">
                 Quantity
             </label>
-            <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
+            <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                    id="quantity" type="number" step="0.01" name="quantity" required>
         </div>
+
+        <!-- Ingredient Unit Field -->
         <div class="mb-6">
             <label class="block text-gray-700 text-sm font-bold mb-2" for="unit">
                 Unit
             </label>
             <select class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="unit" name="unit" required>
+                <!-- Volume units -->
                 <optgroup label="Volume">
                     <option value="tsp">Teaspoon (tsp)</option>
                     <option value="tbsp">Tablespoon (tbsp)</option>
@@ -36,16 +48,19 @@
                     <option value="l">Liter (L)</option>
                     <option value="ml">Milliliter (mL)</option>
                 </optgroup>
+                <!-- Weight units -->
                 <optgroup label="Weight">
                     <option value="oz">Ounce (oz)</option>
                     <option value="lb">Pound (lb)</option>
                     <option value="g">Gram (g)</option>
                     <option value="kg">Kilogram (kg)</option>
                 </optgroup>
+                <!-- Count units -->
                 <optgroup label="Count">
                     <option value="pcs">Piece (e.g., eggs, apples)</option>
                     <option value="slice">Slice (e.g., bread, cheese)</option>
                 </optgroup>
+                <!-- Miscellaneous units -->
                 <optgroup label="Miscellaneous">
                     <option value="dash">Dash</option>
                     <option value="pinch">Pinch</option>
@@ -55,6 +70,8 @@
                 <option value="custom">Custom Value</option>
             </select>
         </div>
+
+        <!-- Custom Unit Input (shown only when 'Custom' is selected) -->
         <div class="mb-4" id="custom-unit-container" style="display:none;">
             <label class="block text-gray-700 text-sm font-bold mb-2" for="custom_unit">
                 Custom Unit
@@ -62,19 +79,27 @@
             <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                    id="custom_unit" type="text" name="custom_unit" placeholder="Enter custom unit here...">
         </div>
-        <button class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" 
+
+        <!-- Submit Button for adding ingredient -->
+        <button class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
                 type="submit">
             Add Ingredient
         </button>
     </form>
 
+    <!-- Displaying Current Ingredients -->
     <div class="bg-white shadow-md rounded px-8 pt-6 pb-8">
+        <!-- Section Title -->
         <h3 class="text-xl font-bold mb-4">Current Ingredients</h3>
+
+        <!-- If there are ingredients, display them in a list -->
         {% if ingredients %}
             <ul class="divide-y divide-gray-200">
                 {% for ingredient in ingredients %}
                     <li class="py-4 flex justify-between items-center">
                         {{ ingredient.name }} - {{ ingredient.quantity }} {{ ingredient.unit }}
+
+                        <!-- Delete Ingredient Form -->
                         <form method="POST" action="{% url 'delete_ingredient' ingredient.id %}" style="display: inline;">
                             {% csrf_token %}
                             <button type="submit" class="text-red-500 hover:text-red-700">
@@ -85,16 +110,19 @@
                 {% endfor %}
             </ul>
         {% else %}
+            <!-- Message when no ingredients are added yet -->
             <p class="text-gray-600">No ingredients added yet.</p>
         {% endif %}
     </div>
 </div>
 
+<!-- JavaScript for showing/hiding custom unit input -->
 <script>
 document.getElementById('unit').addEventListener('change', function() {
     const customUnitContainer = document.getElementById('custom-unit-container');
     const customUnitInput = document.getElementById('custom_unit');
 
+    // Show custom unit input when 'custom' is selected
     if (this.value === 'custom') {
         customUnitContainer.style.display = 'block';
         customUnitInput.setAttribute('name', 'unit'); // Change name to 'unit'
@@ -104,4 +132,5 @@ document.getElementById('unit').addEventListener('change', function() {
     }
 });
 </script>
+
 {% endblock %}

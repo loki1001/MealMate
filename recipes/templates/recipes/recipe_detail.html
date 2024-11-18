@@ -2,12 +2,14 @@
 
 {% block content %}
 <div class="max-w-6xl mx-auto p-6">
+    <!-- Recipe Title -->
     <h2 class="text-2xl font-bold mb-6 text-center">{{ recipe.title }}</h2>
 
     <div class="flex gap-8">
         <!-- Recipe Details Section -->
         <div class="bg-white shadow-md rounded-lg p-8 flex-1 flex flex-col">
             <div class="flex-1">
+                <!-- Ingredients Section -->
                 <h4 class="mt-4 text-lg font-semibold">Ingredients:</h4>
                 <ul class="list-disc list-inside pl-5">
                     {% for ingredient in recipe.recipe_ingredients.all %}
@@ -15,11 +17,13 @@
                     {% endfor %}
                 </ul>
 
+                <!-- Instructions Section -->
                 <h4 class="mt-4 text-lg font-semibold">Instructions:</h4>
                 <div class="pl-5">
                     {{ recipe.instructions|linebreaks }}
                 </div>
 
+                <!-- Additional Recipe Information -->
                 <div class="mt-4">
                     <p><strong>Diet Type:</strong> {{ recipe.diet_type }}</p>
                     <p><strong>Servings:</strong> {{ recipe.servings }}</p>
@@ -27,13 +31,17 @@
                 </div>
             </div>
 
+            <!-- Recipe Action Buttons -->
             <div class="mt-6 flex justify-between items-center">
+                <!-- Back to Home Button -->
                 <a href="{% url 'home' %}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
                     Back to Home
                 </a>
 
+                <!-- Delete Recipe Form with Confirmation -->
                 <form action="{% url 'delete_recipe' recipe.id %}" method="POST" onsubmit="return confirm('Are you sure you want to delete this recipe?');">
                     {% csrf_token %}
+                    <!-- Delete Recipe Button -->
                     <button type="submit" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
                         Delete Recipe
                     </button>
@@ -45,16 +53,19 @@
         <div class="bg-white shadow-md rounded-lg p-8 w-80 flex-shrink-0 flex flex-col">
             <h2 class="text-xl font-bold mb-4">Chat with AI Assistant</h2>
             <div id="chatbox" class="flex-1 border border-gray-300 rounded bg-gray-50 overflow-y-auto">
-                <!-- Messages will appear here -->
+                <!-- Chat messages will appear here -->
             </div>
             <div class="mt-6 flex">
+                <!-- User Input Field for Chatbot -->
                 <input type="text" id="user-input" placeholder="Ask a question..."
                        class="w-full px-4 py-2 border border-gray-300 rounded-l focus:outline-none" />
+                <!-- Send Button -->
                 <button onclick="sendMessage()"
                         class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-r">
                     Send
                 </button>
             </div>
+            <!-- Button to Clear Conversation -->
             <button onclick="clearConversation()" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mt-4">
                 Clear Conversation
             </button>
@@ -63,39 +74,39 @@
 </div>
 
 <script>
-    // Set initial height when content loads
+    // Initialize the chatbox height based on the recipe details section height
     document.addEventListener('DOMContentLoaded', function() {
-        // Get the recipe details section height
+        // Get the height of the recipe details section
         const recipeSection = document.querySelector('.flex-1.flex.flex-col');
         const recipeHeight = recipeSection.offsetHeight;
 
-        // Get the chatbox container and set its height to match recipe section
+        // Adjust the chat container height to match the recipe section
         const chatContainer = document.querySelector('.w-80.flex-shrink-0');
         chatContainer.style.height = `${recipeHeight}px`;
 
-        // Get chatbox and calculate its height based on container
+        // Calculate and set the height of the chatbox
         const chatbox = document.getElementById('chatbox');
         const titleHeight = document.querySelector('.text-xl.font-bold').offsetHeight;
         const inputSection = document.querySelector('.mt-6.flex').offsetHeight;
         const padding = 64; // Account for padding and margins
 
-        // Set chatbox height
         const chatboxHeight = recipeHeight - titleHeight - inputSection - padding;
         chatbox.style.height = `${chatboxHeight}px`;
 
-        const conversation = {{ conversation|safe }};  // Load the conversation from the template context
-
-        // Populate the chatbox with previous conversation
+        // Load previous conversation data and display in the chatbox
+        const conversation = {{ conversation|safe }};
         conversation.forEach(msg => {
             appendMessage(msg.role, msg.content);
         });
     });
 
+    // Append a message to the chatbox (either from user or AI)
     function appendMessage(sender, message) {
         const chatbox = document.getElementById("chatbox");
         const messageElement = document.createElement("div");
         messageElement.classList.add("mb-2", "p-2", "rounded");
 
+        // Style the message based on sender (user or AI)
         if (sender === "user") {
             messageElement.classList.add("bg-blue-100", "text-right");
         } else {
@@ -107,17 +118,19 @@
         chatbox.scrollTop = chatbox.scrollHeight;
     }
 
+    // Send a message from the user to the AI
     async function sendMessage() {
         const userInput = document.getElementById("user-input");
         const message = userInput.value.trim();
         if (!message) return;
 
         appendMessage("user", message);
-        userInput.value = "";
+        userInput.value = ""; // Clear input field
 
-        const recipeId = {{ recipe.id }};
+        const recipeId = {{ recipe.id }}; // Get the recipe ID for the conversation
 
         try {
+            // Send the message to the server and fetch the AI response
             const chatbotUrl = "{% url 'chatbot' recipe.id %}";
             const response = await fetch(chatbotUrl, {
                 method: "POST",
@@ -130,7 +143,7 @@
 
             const data = await response.json();
             if (data.response) {
-                appendMessage("AI", data.response);
+                appendMessage("AI", data.response); // Append AI response to chatbox
             } else if (data.error) {
                 appendMessage("AI", "Error: " + data.error);
             }
@@ -139,10 +152,12 @@
         }
     }
 
+    // Clear the chat conversation
     function clearConversation() {
         const chatbox = document.getElementById("chatbox");
-        chatbox.innerHTML = '';  // Clear the chatbox content
+        chatbox.innerHTML = '';  // Clear chatbox content
 
+        // Send request to clear the conversation in the server
         fetch("{% url 'clear_conversation' recipe.id %}", {
             method: "POST",
             headers: {
@@ -152,11 +167,10 @@
         })
     }
 
-
-    // Add event listener for Enter key
+    // Listen for Enter key press to send a message
     document.getElementById("user-input").addEventListener("keypress", function(event) {
         if (event.key === "Enter") {
-            sendMessage();
+            sendMessage(); // Send message if Enter is pressed
         }
     });
 </script>
