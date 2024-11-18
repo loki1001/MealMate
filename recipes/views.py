@@ -8,11 +8,11 @@ from django.http import JsonResponse
 from openai import OpenAIError
 from .models import Ingredient, Recipe, RecipeIngredient
 import openai
-import os
 from django.contrib.auth import login, authenticate
 from .forms import SignUpForm
 from fractions import Fraction
 
+# Function to convert a quantity to decimal format
 def convert_to_decimal(quantity):
     try:
         # Convert the quantity to a decimal number
@@ -21,9 +21,11 @@ def convert_to_decimal(quantity):
         # Return the original value if conversion fails
         return quantity
 
+# Home view that renders the homepage
 def home(request):
     return render(request, 'recipes/home.html')
 
+# Signup view to handle user registration
 def signup(request):
     if request.method == 'POST':
         form = SignUpForm(request.POST)
@@ -38,13 +40,15 @@ def signup(request):
         form = SignUpForm()
     return render(request, 'recipes/signup.html', {'form': form})
 
-
+# View for displaying and managing the user's ingredients
 @login_required(login_url='/login/')
 def my_items(request):
     if request.method == 'POST':
+        # Retrieve ingredient data from the form submission
         name = request.POST.get('name')
         quantity = request.POST.get('quantity')
         unit = request.POST.get('unit')
+        # Create a new ingredient for the logged-in user
         Ingredient.objects.create(
             user=request.user,
             name=name,
@@ -53,13 +57,15 @@ def my_items(request):
         )
         return redirect('my_items')
 
+    # Retrieve the ingredients for the logged-in user
     ingredients = Ingredient.objects.filter(user=request.user)
     return render(request, 'recipes/my_items.html', {'ingredients': ingredients})
 
-
+# View to delete an ingredient from the user's list
 @login_required(login_url='/login/')
 def delete_ingredient(request, ingredient_id):
     try:
+        # Attempt to retrieve the ingredient to delete
         ingredient = Ingredient.objects.get(id=ingredient_id, user=request.user)
         ingredient.delete()
         messages.success(request, 'Ingredient deleted successfully.')
@@ -67,26 +73,28 @@ def delete_ingredient(request, ingredient_id):
         messages.error(request, 'Ingredient not found.')
     return redirect('my_items')
 
-
+# View to render the page where the user generates a recipe
 @login_required(login_url='/login/')
 def generate_recipe(request):
+    # Retrieve the user's ingredients for recipe generation
     ingredients = Ingredient.objects.filter(user=request.user)
     return render(request, 'recipes/generate_recipe.html', {'ingredients': ingredients})
 
-
+# View to handle diet selection and store ingredients in the session
 @login_required(login_url='/login/')
 def choose_diet(request):
     if request.method == 'POST':
-        # Get database ingredients
+        # Get database ingredients (IDs) from the form submission
         db_ingredients = request.POST.get('db_ingredients', '').split(',')
         db_ingredients = [id for id in db_ingredients if id]
 
-        # Get temporary ingredients
+        # Get temporary ingredients from the form submission
         temp_ingredients_json = request.POST.get('temp_ingredients', '[]')
         try:
+            # Try to parse the temporary ingredients JSON data
             temp_ingredients = json.loads(temp_ingredients_json)
 
-            # Store both types of ingredients in session
+            # Store both database and temporary ingredients in the session
             request.session['db_ingredients'] = db_ingredients
             request.session['temp_ingredients'] = temp_ingredients
 
@@ -96,31 +104,32 @@ def choose_diet(request):
             return redirect('generate_recipe')
     return redirect('generate_recipe')
 
-
+# View to handle serving size selection
 @login_required(login_url='/login/')
 def choose_servings(request):
     if request.method == 'POST':
+        # Get the diet type and store it in the session
         diet_type = request.POST.get('diet_type')
         request.session['diet_type'] = diet_type
         return render(request, 'recipes/choose_servings.html')
     return redirect('choose_diet')
 
-
+# View to review the recipe before finalizing
 @login_required(login_url='/login/')
 def review(request):
     if request.method == 'POST':
         servings = request.POST.get('servings')
         request.session['servings'] = servings
 
-        # Get both types of ingredients from session
+        # Retrieve both types of ingredients from the session
         db_ingredients = request.session.get('db_ingredients', [])
         temp_ingredients = request.session.get('temp_ingredients', [])
         diet_type = request.session.get('diet_type')
 
-        # Get database ingredients
+        # Retrieve database ingredients based on their IDs
         db_ingredients_objects = Ingredient.objects.filter(id__in=db_ingredients)
 
-        # Create temporary ingredient objects (without saving to database)
+        # Create temporary ingredient objects (without saving them to the database)
         temp_ingredients_objects = [
             {
                 'name': ing['name'],
@@ -140,33 +149,40 @@ def review(request):
     return redirect('choose_servings')
 
 
+# Initialize OpenAI client using API key from settings
 client = openai.OpenAI(api_key=settings.OPENAI_API_KEY)
+
+
+# Ensure the user is logged in before accessing this view
 @login_required(login_url='/login/')
 def generate(request):
+    # Fetch ingredients stored in session variables
     db_ingredients = request.session.get('db_ingredients', [])
     temp_ingredients = request.session.get('temp_ingredients', [])
     diet_type = request.session.get('diet_type')
     servings = request.session.get('servings')
 
-    # Get database ingredients
+    # Retrieve ingredients from the database using the IDs stored in session
     db_ingredients_list = Ingredient.objects.filter(id__in=db_ingredients)
 
-    # Prepare ingredient texts for the prompt
+    # Prepare the list of ingredients to be used in the prompt by combining
+    # both database ingredients and temporary ingredients
     ingredients_text = ", ".join([
-        f"{i.quantity} {i.unit} {i.name}" for i in db_ingredients_list
-    ] + [
-        f"{ing['quantity']} {ing['unit']} {ing['name']}" for ing in temp_ingredients
-    ])
+                                     f"{i.quantity} {i.unit} {i.name}" for i in db_ingredients_list
+                                 ] + [
+                                     f"{ing['quantity']} {ing['unit']} {ing['name']}" for ing in temp_ingredients
+                                 ])
 
+    # Construct the prompt that will be sent to OpenAI to generate a recipe
     prompt = f"""
         Create a {diet_type} recipe for {servings} people using these main ingredients: {ingredients_text}.
-        
+
         IMPORTANT CONSTRAINTS:
         1. You MUST use ALL the provided ingredients in the recipe
         2. You can ONLY add salt, pepper, water, and oil as additional ingredients
         3. DO NOT add any other ingredients not listed (no vegetables, herbs, or other additions) unless absolutely essential for the recipe
         4. Please ensure all ingredient quantities are specified in decimal format with common kitchen units like cups, teaspoons, and tablespoons where appropriate and avoid using terms like "to taste" or "to preference."
-        
+
         Return a JSON object with the following structure:
         {{
             "title": "Title of the dish",
@@ -182,25 +198,33 @@ def generate(request):
             ]
         }}
     """
+
+    # Print the generated prompt for debugging purposes
     print(prompt)
 
     try:
+        # Send the prompt to OpenAI to generate a recipe
         response = client.chat.completions.create(
-            model="gpt-4o-mini",
+            model="gpt-4o-mini",  # Use GPT model for generating the recipe
             messages=[
-                {"role": "system", "content": "You are a helpful chef who creates recipes based on available ingredients."},
+                {"role": "system",
+                 "content": "You are a helpful chef who creates recipes based on available ingredients."},
                 {"role": "user", "content": prompt}
             ]
         )
+
+        # Extract and clean up the response content from OpenAI
         response_content = response.choices[0].message.content
         if response_content.startswith('```json'):
             response_content = response_content[7:].strip()  # Remove the leading ```json and any whitespace
         if response_content.endswith('```'):
             response_content = response_content[:-3].strip()  # Remove the trailing ```
+
+        # Parse the response content as a JSON object
         recipe_data = json.loads(response_content)
         print(recipe_data)
 
-        # Create the recipe without adding ingredients to user's owned ingredients
+        # Create a new Recipe object in the database using the generated data
         recipe = Recipe.objects.create(
             user=request.user,
             title=recipe_data["title"],
@@ -210,16 +234,19 @@ def generate(request):
             instructions="\n".join(recipe_data.get("instructions", []))
         )
 
-        # Process ingredients specifically for the recipe
+        # Process the ingredients for the new recipe and store them in the database
         for ing in recipe_data["ingredients"]:
             RecipeIngredient.objects.create(
                 recipe=recipe,
                 name=ing["name"],
-                quantity=convert_to_decimal(ing["quantity"]),
+                quantity=convert_to_decimal(ing["quantity"]),  # Convert quantity to decimal format
                 unit=ing["unit"]
             )
 
+        # Render the recipe result page with the newly created recipe
         return render(request, 'recipes/recipe_result.html', {'recipe': recipe})
+
+    # Handle errors related to invalid JSON format in the response
     except json.JSONDecodeError:
         error_context = {
             'error_title': 'Invalid Recipe Format',
@@ -231,6 +258,8 @@ def generate(request):
             ]
         }
         return render(request, 'recipes/error.html', error_context)
+
+    # Handle errors when the OpenAI service is unavailable
     except OpenAIError as e:
         error_context = {
             'error_title': 'Service Temporarily Unavailable',
@@ -242,6 +271,8 @@ def generate(request):
             ]
         }
         return render(request, 'recipes/error.html', error_context)
+
+    # Handle other unexpected errors
     except Exception as e:
         error_context = {
             'error_title': 'Unexpected Error',
@@ -255,81 +286,93 @@ def generate(request):
         return render(request, 'recipes/error.html', error_context)
 
 
+# Ensure the user is logged in before accessing this view
 @login_required(login_url='/login/')
 def recipe_detail(request, recipe_id):
-    # Get the recipe by its ID or return 404 if not found
+    # Fetch the recipe by its ID or return a 404 error if not found
     recipe = get_object_or_404(Recipe, id=recipe_id, user=request.user)
 
+    # Define a unique key for the conversation associated with the recipe
     conversation_key = f"conversation_{recipe_id}"
+    # Retrieve any existing conversation stored in the session, or initialize an empty list
     conversation = request.session.get(conversation_key, [])
 
+    # If no conversation exists, create a new one
     if not conversation:
+        # Start by constructing the recipe context as a string
         recipe_context = f"Recipe Title: {recipe.title}\nIngredients:\n"
         for ingredient in recipe.recipe_ingredients.all():
+            # Add each ingredient to the recipe context
             recipe_context += f"- {ingredient.quantity} {ingredient.unit} of {ingredient.name}\n"
         recipe_context += f"Instructions:\n{recipe.instructions}"
 
-        # Add the recipe context as a "system" message
+        # Add the recipe context as a "system" message to the conversation
         conversation.append({"role": "system", "content": recipe_context})
 
+    # Store the updated conversation in the session
     request.session[conversation_key] = conversation
+    # Extract only the user messages from the conversation, excluding the system message
     user_ai_conversation = [
         msg for msg in conversation if msg["role"] != "system"
     ]
 
+    # Pass the recipe and the user's AI conversation to the template context
     context = {
         'recipe': recipe,
         'conversation': user_ai_conversation,
     }
 
+    # Render the recipe detail page with the recipe and conversation data
     return render(request, 'recipes/recipe_detail.html', context)
 
+
+# Ensure the user is logged in before accessing this view
 @login_required(login_url='/login/')
 def accept_recipe(request, recipe_id):
-    # Get the recipe by its ID or return 404 if not found
+    # Fetch the recipe by its ID or return a 404 error if not found
     recipe = get_object_or_404(Recipe, id=recipe_id, user=request.user)
 
-    # Update the accepted field to True
+    # Update the 'accepted' field of the recipe to True
     recipe.accepted = True
     recipe.save()
 
-    # Add a success message
+    # Add a success message indicating the recipe has been accepted
     messages.success(request, f"Recipe '{recipe.title}' has been accepted!")
 
-    # Redirect to the recipe's detail page
+    # Redirect the user to the recipe's detail page
     return redirect('recipe_detail', recipe_id=recipe.id)
 
 
+# Ensure the user is logged in before accessing this view
 @login_required(login_url='/login/')
 def reject_recipe(request, recipe_id):
-    # Get the rejected recipe by its ID or return 404 if not found
+    # Fetch the rejected recipe by its ID or return a 404 error if not found
     recipe = get_object_or_404(Recipe, id=recipe_id, user=request.user)
 
-    # Get ingredients from session
-    db_ingredients = request.session.get('db_ingredients', [])
-    temp_ingredients = request.session.get('temp_ingredients', [])
-    diet_type = request.session.get('diet_type')
-    servings = request.session.get('servings')
+    # Retrieve the ingredients and other session data
+    db_ingredients = request.session.get('db_ingredients', [])  # List of database ingredient IDs
+    temp_ingredients = request.session.get('temp_ingredients', [])  # List of temporary ingredients
+    diet_type = request.session.get('diet_type')  # Diet type selected by the user (e.g., vegan, gluten-free)
+    servings = request.session.get('servings')  # Number of servings requested by the user
 
-    # Get database ingredients
+    # Retrieve the actual database ingredients using the IDs stored in the session
     db_ingredients_list = Ingredient.objects.filter(id__in=db_ingredients)
 
-    # Prepare ingredient texts for the prompt
+    # Prepare a string with ingredient details for the prompt, combining database and temporary ingredients
     ingredients_text = ", ".join([
                                      f"{i.quantity} {i.unit} {i.name}" for i in db_ingredients_list
                                  ] + [
                                      f"{ing['quantity']} {ing['unit']} {ing['name']}" for ing in temp_ingredients
                                  ])
 
-    # Get the details of the rejected recipe
+    # Get the details of the recipe being rejected
     rejected_recipe_title = recipe.title
     rejected_recipe_instructions = recipe.instructions
     rejected_recipe_ingredients = ", ".join([
         f"{ri.quantity} {ri.unit} {ri.name}" for ri in recipe.recipe_ingredients.all()
     ])
 
-
-    # Create the prompt for GPT, including the rejected recipe context
+    # Construct the prompt for GPT to generate a new recipe using the same ingredients but different instructions
     prompt = f"""
         The user has rejected the previous recipe, and they want a new one with the same ingredients.
         Please avoid repeating the same recipe or using similar instructions to the previous one.
@@ -340,7 +383,7 @@ def reject_recipe(request, recipe_id):
         - Instructions: {rejected_recipe_instructions}
 
         Now, please create a completely new and different {diet_type} recipe for {servings} people using these ingredients: {ingredients_text}.
-        
+
         IMPORTANT CONSTRAINTS:
         1. You MUST use ALL the provided ingredients in the recipe
         2. You can ONLY add salt, pepper, water, and oil as additional ingredients
@@ -365,7 +408,7 @@ def reject_recipe(request, recipe_id):
     """
     print(prompt)
     try:
-        # Call the GPT API to generate a new recipe
+        # Call the GPT API to generate a new recipe based on the provided prompt
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
@@ -374,19 +417,22 @@ def reject_recipe(request, recipe_id):
             ]
         )
 
-        # Parse the response from GPT
+        # Process the response from GPT
         response_content = response.choices[0].message.content.strip()
+
+        # Clean up the response content by removing any code block markers (if any)
         if response_content.startswith('```json'):
             response_content = response_content[7:].strip()  # Remove the leading ```json
         if response_content.endswith('```'):
             response_content = response_content[:-3].strip()  # Remove the trailing ```
 
-        # Try parsing the response as JSON
+        # Attempt to parse the cleaned response as JSON
         recipe_data = json.loads(response_content)
 
+        # Delete the rejected recipe from the database
         recipe.delete()
 
-        # Create the new recipe in the database
+        # Create the new recipe in the database with the generated data
         new_recipe = Recipe.objects.create(
             user=request.user,
             title=recipe_data["title"],
@@ -397,7 +443,7 @@ def reject_recipe(request, recipe_id):
             accepted=False  # Ensure this recipe is not accepted yet
         )
 
-        # Process ingredients specifically for the new recipe
+        # Process the ingredients for the new recipe and save them to the database
         for ing in recipe_data["ingredients"]:
             RecipeIngredient.objects.create(
                 recipe=new_recipe,
@@ -406,10 +452,11 @@ def reject_recipe(request, recipe_id):
                 unit=ing["unit"]
             )
 
-        # Redirect to the newly created recipe's details page
+        # Redirect to the newly created recipe's detail page and display a success message
         messages.success(request, "Recipe rejected. A new recipe has been generated!")
         return render(request, 'recipes/recipe_result.html', {'recipe': new_recipe})
     except json.JSONDecodeError:
+        # Handle the case where the response could not be parsed as valid JSON
         error_context = {
             'error_title': 'Invalid Recipe Format',
             'error_message': 'We had trouble formatting your recipe. Please try again.',
@@ -421,6 +468,7 @@ def reject_recipe(request, recipe_id):
         }
         return render(request, 'recipes/error.html', error_context)
     except OpenAIError as e:
+        # Handle errors from the GPT API (e.g., service unavailable)
         error_context = {
             'error_title': 'Service Temporarily Unavailable',
             'error_message': 'We\'re having trouble connecting to our recipe service.',
@@ -432,6 +480,7 @@ def reject_recipe(request, recipe_id):
         }
         return render(request, 'recipes/error.html', error_context)
     except Exception as e:
+        # Handle unexpected errors
         error_context = {
             'error_title': 'Unexpected Error',
             'error_message': 'Something went wrong while generating your recipe.',
@@ -446,85 +495,108 @@ def reject_recipe(request, recipe_id):
 
 @login_required(login_url='/login/')
 def my_recipes(request):
-    # Get all recipes saved by the current user
+    # Fetch all recipes saved by the current user from the Recipe model
     recipes = Recipe.objects.filter(user=request.user)
+
+    # Render the 'my_recipes.html' template and pass the retrieved recipes as context
     return render(request, 'recipes/my_recipes.html', {'recipes': recipes})
 
 
 @login_required(login_url='/login/')
 def delete_recipe(request, id):
+    # Handle the POST request to delete a recipe
     if request.method == "POST":
+        # Retrieve the recipe by its ID or return a 404 if not found
         recipe = get_object_or_404(Recipe, id=id)
+
+        # Delete the recipe
         recipe.delete()
+
+        # Display a success message after deletion
         messages.success(request, "Recipe deleted successfully.")
+
+    # Redirect back to the user's recipe list page
     return redirect('my_recipes')
 
 
 @login_required(login_url='/login/')
 def chatbot(request, recipe_id):
+    # Handle the POST request for the chatbot interaction
     if request.method == "POST":
+        # Parse the incoming JSON data and retrieve the user's message
         data = json.loads(request.body)
         user_message = data.get("message", "")
 
-        # Retrieve conversation history for the specific recipe
+        # Define a unique conversation key for this recipe
         conversation_key = f"conversation_{recipe_id}"
+
+        # Retrieve the conversation history for the specific recipe from the session
         conversation = request.session.get(conversation_key, [])
 
-        # Append the user's message to the conversation history for the specific recipe
+        # Append the user's message to the conversation history
         conversation.append({"role": "user", "content": user_message})
         print(conversation)  # Debugging - Optional
 
-        # Send the conversation history to the OpenAI API
+        # Send the conversation history to the OpenAI API for a response
         try:
             response = client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=conversation
+                model="gpt-4o-mini",  # Use the specified model
+                messages=conversation  # Send the conversation as context
             )
 
-            # Get the bot's reply
+            # Extract the bot's reply from the response
             bot_reply = response.choices[0].message.content.strip()
 
             # Append the bot's response to the conversation history
             conversation.append({"role": "assistant", "content": bot_reply})
 
-            # Save the updated conversation history for the recipe back to the session
+            # Save the updated conversation history back to the session
             request.session[conversation_key] = conversation
 
+            # Return the bot's response as a JSON response
             return JsonResponse({"response": bot_reply})
 
+        # Handle exceptions during the API call
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
 
+    # Return an error response for non-POST requests
     else:
         return JsonResponse({"error": "Only POST requests are allowed"}, status=400)
 
 
 @login_required
 def clear_conversation(request, recipe_id):
+    # Generate a unique session key for the conversation related to the recipe
     conversation_key = f"conversation_{recipe_id}"
+
+    # Check if the conversation exists in the session and delete it if found
     if conversation_key in request.session:
         del request.session[conversation_key]
 
+    # Redirect to the recipe details page for the given recipe_id
     return redirect('recipe_detail', recipe_id=recipe_id)
 
 
 @login_required(login_url='/login/')
 def generate_flexible(request):
+    # Retrieve the ingredients, diet type, and servings from the session
     db_ingredients = request.session.get('db_ingredients', [])
     temp_ingredients = request.session.get('temp_ingredients', [])
     diet_type = request.session.get('diet_type')
     servings = request.session.get('servings')
 
-    # Get database ingredients
+    # Get the ingredient objects from the database based on the selected ids
     db_ingredients_list = Ingredient.objects.filter(id__in=db_ingredients)
 
-    # Prepare ingredient texts for the prompt
+    # Prepare a string representation of all ingredients to use in the recipe prompt
     ingredients_text = ", ".join([
                                      f"{i.quantity} {i.unit} {i.name}" for i in db_ingredients_list
                                  ] + [
                                      f"{ing['quantity']} {ing['unit']} {ing['name']}" for ing in temp_ingredients
                                  ])
 
+    # Construct the prompt for the AI to generate a recipe based on the provided ingredients and guidelines
     prompt = f"""
         Create a {diet_type} recipe for {servings} people incorporating these ingredients: {ingredients_text}.
 
@@ -549,24 +621,31 @@ def generate_flexible(request):
             ]
         }}
     """
-    print(prompt)
+    print(prompt)  # Debugging - Optional
 
     try:
+        # Call the OpenAI API to generate a recipe based on the prompt and ingredients
         response = client.chat.completions.create(
-            model="gpt-4o-mini",
+            model="gpt-4o-mini",  # Specify the model to use
             messages=[
                 {"role": "system",
                  "content": "You are a creative chef who creates delicious recipes incorporating available ingredients while adding complementary ingredients when needed."},
-                {"role": "user", "content": prompt}
+                {"role": "user", "content": prompt}  # User's recipe prompt
             ]
         )
+
+        # Extract the content of the response
         response_content = response.choices[0].message.content
+        # Clean up the response to remove any markdown formatting (if present)
         if response_content.startswith('```json'):
             response_content = response_content[7:].strip()
         if response_content.endswith('```'):
             response_content = response_content[:-3].strip()
+
+        # Parse the response content as JSON to extract the recipe data
         recipe_data = json.loads(response_content)
 
+        # Create a new recipe object in the database using the data from the AI response
         recipe = Recipe.objects.create(
             user=request.user,
             title=recipe_data["title"],
@@ -576,15 +655,19 @@ def generate_flexible(request):
             instructions="\n".join(recipe_data.get("instructions", [])),
         )
 
+        # Add each ingredient from the AI-generated recipe to the database
         for ing in recipe_data["ingredients"]:
             RecipeIngredient.objects.create(
                 recipe=recipe,
                 name=ing["name"],
-                quantity=convert_to_decimal(ing["quantity"]),
+                quantity=convert_to_decimal(ing["quantity"]),  # Convert quantity to decimal format
                 unit=ing["unit"]
             )
 
+        # Render the 'recipe_result.html' template with the newly created recipe
         return render(request, 'recipes/recipe_result.html', {'recipe': recipe})
+
+    # Handle specific exceptions for JSON formatting issues
     except json.JSONDecodeError:
         error_context = {
             'error_title': 'Invalid Recipe Format',
@@ -595,7 +678,10 @@ def generate_flexible(request):
                 'Check if your dietary preferences work with these ingredients'
             ]
         }
+        # Render an error page with the appropriate error message and suggestions
         return render(request, 'recipes/error.html', error_context)
+
+    # Handle OpenAI API connection errors
     except OpenAIError as e:
         error_context = {
             'error_title': 'Service Temporarily Unavailable',
@@ -606,7 +692,10 @@ def generate_flexible(request):
                 'If the problem persists, try starting over'
             ]
         }
+        # Render an error page with the appropriate error message and suggestions
         return render(request, 'recipes/error.html', error_context)
+
+    # Handle any other unexpected errors
     except Exception as e:
         error_context = {
             'error_title': 'Unexpected Error',
@@ -617,4 +706,5 @@ def generate_flexible(request):
                 'If the problem continues, please contact support'
             ]
         }
+        # Render an error page with the appropriate error message and suggestions
         return render(request, 'recipes/error.html', error_context)
