@@ -1,11 +1,11 @@
 # views.py
 import json
-
 from django.conf import settings
 from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
+from openai import OpenAIError
 from .models import Ingredient, Recipe, RecipeIngredient
 import openai
 import os
@@ -220,11 +220,39 @@ def generate(request):
             )
 
         return render(request, 'recipes/recipe_result.html', {'recipe': recipe})
-
     except json.JSONDecodeError:
-        return JsonResponse({'error': 'Failed to decode response'}, status=500)
+        error_context = {
+            'error_title': 'Invalid Recipe Format',
+            'error_message': 'We had trouble formatting your recipe. Please try again.',
+            'suggestions': [
+                'Try using fewer ingredients',
+                'Make sure all ingredients have proper measurements',
+                'Check if your dietary preferences work with these ingredients'
+            ]
+        }
+        return render(request, 'recipes/error.html', error_context)
+    except OpenAIError as e:
+        error_context = {
+            'error_title': 'Service Temporarily Unavailable',
+            'error_message': 'We\'re having trouble connecting to our recipe service.',
+            'suggestions': [
+                'Please wait a few moments and try again',
+                'Check your internet connection',
+                'If the problem persists, try starting over'
+            ]
+        }
+        return render(request, 'recipes/error.html', error_context)
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        error_context = {
+            'error_title': 'Unexpected Error',
+            'error_message': 'Something went wrong while generating your recipe.',
+            'suggestions': [
+                'Try again with different ingredients',
+                'Make sure all inputs are valid',
+                'If the problem continues, please contact support'
+            ]
+        }
+        return render(request, 'recipes/error.html', error_context)
 
 
 @login_required(login_url='/login/')
@@ -381,11 +409,39 @@ def reject_recipe(request, recipe_id):
         # Redirect to the newly created recipe's details page
         messages.success(request, "Recipe rejected. A new recipe has been generated!")
         return render(request, 'recipes/recipe_result.html', {'recipe': new_recipe})
-
     except json.JSONDecodeError:
-        return JsonResponse({'error': 'Failed to decode response'}, status=500)
+        error_context = {
+            'error_title': 'Invalid Recipe Format',
+            'error_message': 'We had trouble formatting your recipe. Please try again.',
+            'suggestions': [
+                'Try using fewer ingredients',
+                'Make sure all ingredients have proper measurements',
+                'Check if your dietary preferences work with these ingredients'
+            ]
+        }
+        return render(request, 'recipes/error.html', error_context)
+    except OpenAIError as e:
+        error_context = {
+            'error_title': 'Service Temporarily Unavailable',
+            'error_message': 'We\'re having trouble connecting to our recipe service.',
+            'suggestions': [
+                'Please wait a few moments and try again',
+                'Check your internet connection',
+                'If the problem persists, try starting over'
+            ]
+        }
+        return render(request, 'recipes/error.html', error_context)
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        error_context = {
+            'error_title': 'Unexpected Error',
+            'error_message': 'Something went wrong while generating your recipe.',
+            'suggestions': [
+                'Try again with different ingredients',
+                'Make sure all inputs are valid',
+                'If the problem continues, please contact support'
+            ]
+        }
+        return render(request, 'recipes/error.html', error_context)
 
 
 @login_required(login_url='/login/')
@@ -529,8 +585,36 @@ def generate_flexible(request):
             )
 
         return render(request, 'recipes/recipe_result.html', {'recipe': recipe})
-
     except json.JSONDecodeError:
-        return JsonResponse({'error': 'Failed to decode response'}, status=500)
+        error_context = {
+            'error_title': 'Invalid Recipe Format',
+            'error_message': 'We had trouble formatting your recipe. Please try again.',
+            'suggestions': [
+                'Try using fewer ingredients',
+                'Make sure all ingredients have proper measurements',
+                'Check if your dietary preferences work with these ingredients'
+            ]
+        }
+        return render(request, 'recipes/error.html', error_context)
+    except OpenAIError as e:
+        error_context = {
+            'error_title': 'Service Temporarily Unavailable',
+            'error_message': 'We\'re having trouble connecting to our recipe service.',
+            'suggestions': [
+                'Please wait a few moments and try again',
+                'Check your internet connection',
+                'If the problem persists, try starting over'
+            ]
+        }
+        return render(request, 'recipes/error.html', error_context)
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        error_context = {
+            'error_title': 'Unexpected Error',
+            'error_message': 'Something went wrong while generating your recipe.',
+            'suggestions': [
+                'Try again with different ingredients',
+                'Make sure all inputs are valid',
+                'If the problem continues, please contact support'
+            ]
+        }
+        return render(request, 'recipes/error.html', error_context)
