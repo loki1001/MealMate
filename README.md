@@ -1,11 +1,29 @@
 # MealMate 🍳
 
-## Overview
+## 📑 Table of Contents
+1. [📖 Overview](#overview)
+2. [🌟 Key Features](#-key-features)
+   - [Recipe Generator](#recipe-generator)
+   - [Ingredient Management](#ingredient-management)
+   - [AI Recipe Assistant](#ai-recipe-assistant)
+   - [Recipe Management](#recipe-management)
+3. [🛠 Technical Stack](#-technical-stack)
+   - [Backend](#backend)
+   - [Frontend](#frontend)
+4. [📋 Prerequisites](#-prerequisites)
+5. [🚀 Installation](#-installation)
+6. [💡 Usage Guide](#-usage-guide)
+   - [Account Management](#account-management)
+   - [Recipe Generation](#recipe-generation)
+   - [Recipe Interaction](#recipe-interaction)
+   - [Recipe Assistant Features](#recipe-assistant-features)
+   
+## 📖 Overview
 MealMate is a Django-powered recipe generation platform that transforms your available ingredients into personalized recipes. Leveraging OpenAI's GPT-4, it creates custom recipes tailored to your dietary preferences and serving needs, complete with an AI chatbot for cooking guidance.
 
 ## 🌟 Key Features
 
-### Recipe Generation
+### Recipe Generator
 - **Strict Recipe Mode**: Creates recipes using only your available ingredients plus basic seasonings
 - **Flexible Recipe Mode**: Uses your ingredients as a base while adding complementary ingredients
 - **Diet Customization**: Supports various dietary preferences:
