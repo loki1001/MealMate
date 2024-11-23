@@ -178,10 +178,11 @@ def generate(request):
         Create a {diet_type} recipe for {servings} people using these main ingredients: {ingredients_text}.
 
         IMPORTANT CONSTRAINTS:
-        1. You MUST use ALL the provided ingredients in the recipe
-        2. You can ONLY add salt, pepper, water, and oil as additional ingredients
-        3. DO NOT add any other ingredients not listed (no vegetables, herbs, or other additions) unless absolutely essential for the recipe
-        4. Please ensure all ingredient quantities are specified in decimal format with common kitchen units like cups, teaspoons, and tablespoons where appropriate and avoid using terms like "to taste" or "to preference."
+        1. You MUST use ONLY the provided ingredients in the recipe
+        2. You can omit some of the ingredients if they are not crucial to the recipe
+        3. You can ONLY add salt, pepper, water, and oil as additional ingredients
+        4. DO NOT add any other ingredients not listed (no vegetables, herbs, or other additions) unless absolutely essential for the recipe
+        5. Please ensure all ingredient quantities are specified in decimal format with common kitchen units like cups, teaspoons, and tablespoons where appropriate and avoid using terms like "to taste" or "to preference."
 
         Return a JSON object with the following structure:
         {{
@@ -385,11 +386,12 @@ def reject_recipe(request, recipe_id):
         Now, please create a completely new and different {diet_type} recipe for {servings} people using these ingredients: {ingredients_text}.
 
         IMPORTANT CONSTRAINTS:
-        1. You MUST use ALL the provided ingredients in the recipe
-        2. You can ONLY add salt, pepper, water, and oil as additional ingredients
-        3. DO NOT add any other ingredients not listed (no vegetables, herbs, or other additions) unless absolutely essential for the recipe
-        4. Please ensure all ingredient quantities are specified in decimal format with common kitchen units like cups, teaspoons, and tablespoons where appropriate and avoid using terms like "to taste" or "to preference."
-        5. The new recipe must be significantly different from the rejected recipe in terms of preparation method and final dish.
+        1. You MUST use ONLY the provided ingredients in the recipe
+        2. You can omit some of the ingredients if they are not crucial to the recipe
+        3. You can ONLY add salt, pepper, water, and oil as additional ingredients
+        4. DO NOT add any other ingredients not listed (no vegetables, herbs, or other additions) unless absolutely essential for the recipe
+        5. Please ensure all ingredient quantities are specified in decimal format with common kitchen units like cups, teaspoons, and tablespoons where appropriate and avoid using terms like "to taste" or "to preference."
+        6. The new recipe must be significantly different from the rejected recipe in terms of preparation method and final dish.
 
         Return the result in the following JSON format:
         {{
